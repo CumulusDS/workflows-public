@@ -1,0 +1,75 @@
+name: Set Matrix
+on:
+  workflow_call:
+    inputs:
+      config:
+        required: true
+        type: string
+      githubEventName:
+        required: true
+        type: string
+      githubEventAction:
+        required: true
+        type: string
+      onlyUsEast1:
+        required: false
+        type: string
+        default: "false"
+  outputs:
+    matrix:
+      description: "Calculated output matrix"
+      value: ${{ jobs.matrix.outputs.matrix }}
+    stage:
+      description: "Stage"
+      value: ${{ jobs.matrix.outputs.stage }}
+    service:
+      description: "Service"
+      value: ${{ jobs.matrix.outputs.service }}
+jobs:
+  matrix:
+    name: Build Matrix
+    runs-on: ubuntu-22.04
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      stage: ${{ steps.feature.outputs.stage }}
+      service: ${{ steps.serverless.outputs.stage }}
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Get serverless properties
+        id: serverless
+        uses: CumulusDS/get-yaml-paths-action@v1
+        with:
+          file: ${{ inputs.config }}
+          service: service
+      - name: Set feature stage
+        id: feature
+        uses: CumulusDS/feature-stage-action@v2
+        with:
+          githubEventName: ${{ inputs.githubEventName }}
+      - name: matrix outputs
+        id: set-matrix
+        run: |
+          echo "Stage is ${{ env.FEATURE_STAGE }}"
+          if [[ "${{ inputs.githubEventAction }}" == "released" ]]; then
+            if [[ "${{ inputs.onlyUsEast1 }}" == "true" ]]; then
+              echo "matrix={\"include\":[{\"region\":\"us-east-1\",\"stage\":\"dev\"},{\"region\":\"us-east-1\",\"stage\":\"prod\"}]}" >> $GITHUB_OUTPUT
+            else
+              echo "matrix={\"include\":[{\"region\":\"us-east-1\",\"stage\":\"dev\"},{\"region\":\"us-east-2\",\"stage\":\"dev\"},{\"region\":\"us-east-1\",\"stage\":\"prod\"},{\"region\":\"us-east-2\",\"stage\":\"prod\"},{\"region\":\"ap-southeast-1\",\"stage\":\"prod\"},{\"region\":\"eu-west-1\",\"stage\":\"prod\"}]}" >> $GITHUB_OUTPUT
+            fi
+          
+          else
+            if [[ "${{ inputs.onlyUsEast1 }}" == "true" ]]; then
+              echo "matrix={\"include\":[{\"region\":\"us-east-1\",\"stage\":\"${{ env.FEATURE_STAGE }}\"}]}" >> $GITHUB_OUTPUT
+            else
+              echo "matrix={\"include\":[{\"region\":\"us-east-1\",\"stage\":\"${{ env.FEATURE_STAGE }}\"},{\"region\":\"us-east-2\",\"stage\":\"${{ env.FEATURE_STAGE }}\"}]}" >> $GITHUB_OUTPUT
+            fi
+          fi
+      - name: echo matrix
+        id: echo-matrix
+        env:
+          MATRIX: ${{ toJson(steps.set-matrix.outputs.matrix) }}
+        run: echo ${MATRIX} | sed 's/\\"/"/g' | sed 's/^.\(.*\).$/\1/' | jq '.'

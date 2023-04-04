@@ -1,0 +1,66 @@
+name: Delete Feature Branch
+on:
+  workflow_call:
+    inputs:
+      config:
+        type: string
+        required: true
+      onlyUsEast1:
+        type: string
+        required: false
+        default: "false"
+      githubEventRef:
+        type: string
+        required: true
+jobs:
+  matrix:
+    name: Build Matrix
+    runs-on: ubuntu-22.04
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      stage: ${{ steps.feature.outputs.stage }}
+      service: ${{ steps.serverless.outputs.stage }}
+    timeout-minutes: 5
+    uses: ./.github/workflows/matrix.yml
+    with:
+      config: ${{ inputs.config }}
+      githubEventName: ${{ inputs.githubEventName }}
+  deprovision:
+    name: Deprovision
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    strategy:
+      matrix: ${{fromJson(needs.matrix.outputs.matrix)}}
+      fail-fast: false
+    steps:
+      - name: Setup
+        uses: CumulusDS/workflow-setup-action@v2
+        with:
+          nodeVersion: 16
+          npmToken: ${{ secrets.NODE_AUTH_TOKEN }}
+          fetch-depth: 0
+          packageManager: yarn3
+      - name: Assume CI Role
+        id: role
+        uses: CumulusDS/assume-role-action@v1
+        with:
+          role: "ContinuousIntegration"
+          hyphen: false
+          region: "${{ matrix.region }}"
+          account_id: ${{ secrets.STS_DEV_AWS_ACCOUNT_ID }}
+          duration_seconds: 1200
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Set feature stage
+        id: set-feature-stage
+        uses: CumulusDS/feature-stage-action@v2
+        with:
+          githubEventRef: ${{ inputs.githubEventRef }}
+      - name: serverless remove
+        uses: CumulusDS/sls-deploy-remove-action@v1
+        with:
+          service: ${{ steps.role.outputs.service }}
+          stage: ${{ steps.set-feature-stage.outputs.stage }}
+          action: remove
+          verbose: true
+          debug: false

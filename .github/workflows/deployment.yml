@@ -1,0 +1,78 @@
+name: Deploy
+on:
+  workflow_call:
+    inputs:
+      config:
+        required: true
+        type: string
+      githubEventName:
+        required: true
+        type: string
+      githubEventAction:
+        required: true
+        type: string
+      onlyUsEast1:
+        required: false
+        type: string
+        default: "false"
+    outputs:
+      matrix:
+        description: "Calculated output matrix"
+        value: ${{ jobs.matrix.outputs.matrix }}
+      stage:
+        description: "Stage"
+        value: ${{ jobs.matrix.outputs.stage }}
+      service:
+        description: "Service"
+        value: ${{ jobs.matrix.outputs.service }}
+jobs:
+  matrix:
+    name: Build Matrix
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    uses: ./.github/workflows/matrix.yml
+    with:
+      config: ${{ inputs.config }}
+      githubEventName: ${{ inputs.githubEventName }}
+  deploy:
+    name: Deploy ${{ matrix.stage }} (${{ matrix.region }})
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    needs: matrix
+    strategy:
+      matrix: ${{fromJson(needs.matrix.outputs.matrix)}}
+      fail-fast: false
+    steps:
+      - name: Setup
+        uses: CumulusDS/workflow-setup-action@v2
+        with:
+          nodeVersion: 16
+          npmToken: ${{ secrets.NODE_AUTH_TOKEN }}
+          fetch-depth: 0
+          packageManager: yarn3
+      - name: determine AWS account
+        id: account
+        run: |
+          if [ "${{ matrix.stage }}" == "prod" ]; then
+            echo "AWS_ACCOUNT=${{ secrets.STS_PROD_AWS_ACCOUNT_ID }}" >> $GITHUB_ENV
+          else
+            echo "AWS_ACCOUNT=${{ secrets.STS_DEV_AWS_ACCOUNT_ID }}" >> $GITHUB_ENV
+          fi
+      - name: Assume Role
+        id: role
+        uses: CumulusDS/assume-role-action@v1
+        with:
+          file: ${{ inputs.config }}
+          role: "ContinuousIntegration"
+          hyphen: false
+          region: "${{ matrix.region }}"
+          account_id: ${{ env.AWS_ACCOUNT }}
+          duration_seconds: 1200
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: serverless deploy
+        uses: CumulusDS/sls-deploy-remove-action@v1
+        with:
+          service: ${{ steps.role.outputs.service }}
+          stack_policy_file: templates/policies/serverless.json
+          args: --config ${{ inputs.config }}
