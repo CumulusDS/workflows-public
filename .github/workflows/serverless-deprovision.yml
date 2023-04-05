@@ -5,32 +5,19 @@ on:
       config:
         type: string
         required: true
-      onlyUsEast1:
-        type: string
-        required: false
-        default: "false"
       githubEventRef:
         type: string
         required: true
 jobs:
-  matrix:
-    name: Build Matrix
-    runs-on: ubuntu-22.04
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-      stage: ${{ steps.feature.outputs.stage }}
-      service: ${{ steps.serverless.outputs.stage }}
-    timeout-minutes: 5
-    uses: ./.github/workflows/matrix.yml
-    with:
-      config: ${{ inputs.config }}
-      githubEventName: ${{ inputs.githubEventName }}
   deprovision:
     name: Deprovision
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     strategy:
-      matrix: ${{fromJson(needs.matrix.outputs.matrix)}}
+      matrix:
+        region:
+          - us-east-1
+          - us-east-2
       fail-fast: false
     steps:
       - name: Setup

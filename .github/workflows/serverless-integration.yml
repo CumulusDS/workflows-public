@@ -1,0 +1,120 @@
+name: Serverless Integration
+on:
+  workflow_call:
+    inputs:
+      githubEventName:
+        required: false
+        type: string
+        default: ${{ github.event_name }}
+      githubEventAction:
+        required: false
+        type: string
+        default: ${{ github.event.action }}
+      loneRegion:
+        description: "Should deployment only happen in one region?  If yes, provide that region"
+        required: false
+        type: string
+        default: "false"
+      nodeVersion:
+        description: "Node version to use"
+        required: false
+        type: string
+        default: "16"
+      ref:
+        description: "Ref to checkout.  Should only have value passed to it in specific circumstances"
+        required: false
+        type: string
+        default: ""
+      fetchDepth:
+        description: "Checkout fetch-depth"
+        required: false
+        type: string
+        default: "0"
+      packageManager:
+        description: "Package manager to use.  `yarn` or `yarn3`"
+        required: false
+        type: string
+        default: "yarn3"
+      role:
+        description: "Role to assume for integration testing"
+        required: false
+        type: string
+        default: "Cucumber"
+      region:
+        description: "Region to run integration tests against"
+        required: false
+        type: string
+        default: "us-east-1"
+      hyphen:
+        description: "Is the role-name hyphenated?"
+        required: false
+        type: string
+        default: "false"
+      accountId:
+        description: "Account ID that the tests will be run in"
+        required: false
+        type: string
+        default: ""
+      durationSeconds:
+        description: "Duration in seconds to assume role for"
+        required: false
+        type: string
+        default: "1200"
+      npmToken:
+        description: "NPM token"
+        required: false
+        type: string
+        default: ""
+      awsAccessKeyId:
+        description: "Key ID"
+        required: false
+        type: string
+        default: ""
+      awsSecretAccessKey:
+        description: "Key secret"
+        required: false
+        type: string
+        default: ""
+jobs:
+  integration:
+    name: Integration Test
+    concurrency: productivity_integration
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - name: Set feature stage
+        id: feature
+        uses: CumulusDS/feature-stage-action@v2
+        with:
+          githubEventName: ${{ inputs.githubEventName }}
+      - name: Setup
+        uses: CumulusDS/workflow-setup-action@v2
+        with:
+          nodeVersion: ${{ inputs.nodeVersion }}
+          npmToken: ${{ inputs.npmToken }}
+          ref: ${{ inputs.ref }}
+          fetch-depth: ${{ inputs.fetchDepth }}
+          packageManager: ${{ inputs.packageManager }}
+      - name: determine AWS account
+        id: account
+        uses: CumulusDS/workflows/.github/actions/determine-account@reusable-test
+      - name: determine secrets
+        id: secrets
+        uses: CumulusDS/workflows/.github/actions/determine-secrets@reusable-test
+        env:
+          npm: ${{ inputs.npmToken }}
+          awsAccessKeyId: ${{ inputs.awsAccessKeyId }}
+          awsSecretAccessKey: ${{ inputs.awsSecretAccessKey }}
+      - name: Assume Role
+        id: role
+        uses: CumulusDS/assume-role-action@v1
+        with:
+          role: ${{ inputs.role }}
+          hyphen: ${{ inputs.hyphen }}
+          region: ${{ inputs.region }}
+          duration_seconds: ${{ inputs.durationSeconds }}
+          account_id: ${{ env.AWS_ACCOUNT }}
+          aws_access_key_id: ${{ env.ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ env.SECRET_ACCESS_KEY }}
+      - name: Integration Test
+        run: yarn cucumber

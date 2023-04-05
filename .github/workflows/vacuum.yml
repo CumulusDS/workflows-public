@@ -1,0 +1,26 @@
+name: Stale Stack Cleanup
+on:
+  workflow_call
+jobs:
+  cleanup:
+    name: Stack Cleanup
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        region:
+          - us-east-1
+          - us-east-2
+    steps:
+      - name: Cleanup Stacks
+        id: cleanup
+        uses: CumulusDS/stack-cleanup-action@v1
+        with:
+          region: ${{ matrix.region }}
+          role: "ContinuousIntegration"
+          hyphen: false
+          account_id: ${{ secrets.STS_DEV_AWS_ACCOUNT_ID }}
+          duration_seconds: 1800
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

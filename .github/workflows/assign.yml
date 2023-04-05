@@ -1,0 +1,11 @@
+name: Author Assigner
+on:
+  workflow_call
+jobs:
+  assignAuthor:
+    name: Assign author
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    steps:
+      - name: assign
+        uses: technote-space/assign-author@v1

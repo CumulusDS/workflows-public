@@ -1,0 +1,42 @@
+name: Serverless Unit
+on:
+  workflow_call:
+    inputs:
+      nodeVersion:
+        description: ""
+        required: false
+        type: string
+        default: "16"
+      ref:
+        description: ""
+        required: false
+        type: string
+        default: ""
+      fetchDepth:
+        description: ""
+        required: false
+        type: string
+        default: "0"
+      packageManager:
+        description: ""
+        required: false
+        type: string
+        default: "yarn3"
+jobs:
+  unit:
+    name: Unit
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - name: Setup
+        uses: CumulusDS/workflow-setup-action@v2
+        with:
+          nodeVersion: ${{ inputs.nodeVersion }}
+          npmToken: ${{ secrets.NODE_AUTH_TOKEN }}
+          ref: ${{ inputs.ref }}
+          fetch-depth: ${{ inputs.fetchDepth }}
+          packageManager: ${{ inputs.packageManager }}
+      - name: Yarn Test
+        uses: CumulusDS/yarn-test-action@v1
+      - name: Upload
+        uses: CumulusDS/unit-end-action@v1

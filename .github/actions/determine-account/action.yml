@@ -1,0 +1,18 @@
+name: 'determine-account-action'
+description: "determine stage"
+runs:
+  using: composite
+  steps:
+    - name: ls
+      run: ls- lah
+      shell: bash
+    - name: Determine Account
+      id: account
+      run: determine-account
+#      run: |
+#        if [ "${FEATURE_STAGE}" == "prod" ]; then
+#          echo "AWS_ACCOUNT=${{ secrets.STS_PROD_AWS_ACCOUNT_ID }}" >> $GITHUB_ENV
+#        else
+#          echo "AWS_ACCOUNT=${{ secrets.STS_DEV_AWS_ACCOUNT_ID }}" >> $GITHUB_ENV
+#        fi
+      shell: bash
