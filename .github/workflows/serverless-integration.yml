@@ -50,11 +50,6 @@ on:
         required: false
         type: string
         default: "false"
-      accountId:
-        description: "Account ID that the tests will be run in"
-        required: false
-        type: string
-        default: ""
       durationSeconds:
         description: "Duration in seconds to assume role for"
         required: false
@@ -64,17 +59,17 @@ on:
         description: "NPM token"
         required: false
         type: string
-        default: ""
+        default: "NODE_AUTH_TOKEN"
       awsAccessKeyId:
         description: "Key ID"
         required: false
         type: string
-        default: ""
+        default: "AWS_ACCESS_KEY_ID"
       awsSecretAccessKey:
         description: "Key secret"
         required: false
         type: string
-        default: ""
+        default: "AWS_SECRET_ACCESS_KEY"
 jobs:
   integration:
     name: Integration Test
@@ -91,20 +86,17 @@ jobs:
         uses: CumulusDS/workflow-setup-action@v2
         with:
           nodeVersion: ${{ inputs.nodeVersion }}
-          npmToken: ${{ inputs.npmToken }}
+          npmToken: ${{ secrets[inputs.npmToken] }}
           ref: ${{ inputs.ref }}
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}
       - name: determine AWS account
         id: account
         uses: CumulusDS/workflows/.github/actions/determine-account@reusable-test
-      - name: determine secrets
-        id: secrets
-        uses: CumulusDS/workflows/.github/actions/determine-secrets@reusable-test
         env:
-          npm: ${{ inputs.npmToken }}
-          awsAccessKeyId: ${{ inputs.awsAccessKeyId }}
-          awsSecretAccessKey: ${{ inputs.awsSecretAccessKey }}
+          FEATURE_STAGE: ${{ matrix.stage }}
+          DEV: ${{ secrets.STS_DEV_AWS_ACCOUNT_ID }}
+          PROD: ${{ secrets.STS_PROD_AWS_ACCOUNT_ID }}
       - name: Assume Role
         id: role
         uses: CumulusDS/assume-role-action@v1
@@ -114,7 +106,7 @@ jobs:
           region: ${{ inputs.region }}
           duration_seconds: ${{ inputs.durationSeconds }}
           account_id: ${{ env.AWS_ACCOUNT }}
-          aws_access_key_id: ${{ env.ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ env.SECRET_ACCESS_KEY }}
+          aws_access_key_id: ${{ secrets[inputs.awsAccessKeyId] }}
+          aws_secret_access_key: ${{ secrets[inputs.awsSecretAccessKey] }}
       - name: Integration Test
         run: yarn cucumber

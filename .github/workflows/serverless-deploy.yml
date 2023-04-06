@@ -29,11 +29,6 @@ on:
         required: false
         type: string
         default: ""
-      npmToken:
-        description: "NPM token"
-        required: false
-        type: string
-        default: ""
       fetchDepth:
         description: "Checkout fetch-depth"
         required: false
@@ -59,16 +54,21 @@ on:
         required: false
         type: string
         default: "1200"
+      npmToken:
+        description: "NPM token"
+        required: false
+        type: string
+        default: "NODE_AUTH_TOKEN"
       awsAccessKeyId:
         description: "Key ID"
         required: false
         type: string
-        default: ""
+        default: "AWS_ACCESS_KEY_ID"
       awsSecretAccessKey:
         description: "Key secret"
         required: false
         type: string
-        default: ""
+        default: "AWS_SECRET_ACCESS_KEY"
       stackPolicyFile:
         description: "Stack policy file"
         required: false
@@ -134,18 +134,11 @@ jobs:
       matrix: ${{fromJson(needs.matrix.outputs.matrix)}}
       fail-fast: false
     steps:
-      - name: determine secrets
-        id: secrets
-        uses: CumulusDS/workflows/.github/actions/determine-secrets@reusable-test
-        env:
-          npm: ${{ inputs.npmToken }}
-          awsAccessKeyId: ${{ inputs.awsAccessKeyId }}
-          awsSecretAccessKey: ${{ inputs.awsSecretAccessKey }}
       - name: Setup
         uses: CumulusDS/workflow-setup-action@v2
         with:
           nodeVersion: ${{ inputs.nodeVersion }}
-          npmToken: ${{ inputs.npmToken }}
+          npmToken: ${{ secrets[inputs.npmToken] }}
           ref: ${{ inputs.ref }}
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}
@@ -154,6 +147,8 @@ jobs:
         uses: CumulusDS/workflows/.github/actions/determine-account@reusable-test
         env:
           FEATURE_STAGE: ${{ matrix.stage }}
+          DEV: ${{ secrets.STS_DEV_AWS_ACCOUNT_ID }}
+          PROD: ${{ secrets.STS_PROD_AWS_ACCOUNT_ID }}
       - name: Assume Role
         id: role
         uses: CumulusDS/assume-role-action@v1
@@ -164,8 +159,8 @@ jobs:
           region: "${{ matrix.region }}"
           account_id: ${{ env.AWS_ACCOUNT }}
           duration_seconds: ${{ inputs.durationSeconds }}
-          aws_access_key_id: ${{ env.ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ env.SECRET_ACCESS_KEY }}
+          aws_access_key_id: ${{ secrets[inputs.awsAccessKeyId] }}
+          aws_secret_access_key: ${{ secrets[inputs.awsSecretAccessKey] }}
       - name: serverless deploy
         uses: CumulusDS/sls-deploy-remove-action@v1
         with:
