@@ -1,0 +1,63 @@
+name: Package Unit
+on:
+  workflow_call:
+    inputs:
+      workspace:
+        description: "workspace to run in"
+        required: false
+        type: string
+        default: ""
+      ref:
+        description: "Ref to checkout.  Should be blank in most cases to let the system determine"
+        required: false
+        type: string
+        default: ""
+      fetchDepth:
+        description: "Checkout fetch depth"
+        required: false
+        type: string
+        default: "0"
+      packageManager:
+        description: "Package manager to use.  yarn3 vs yarn"
+        required: false
+        type: string
+        default: "yarn3"
+      npmjsToken:
+        description: "NPMJS auth token"
+        required: false
+        type: string
+        default: "NODE_AUTH_TOKEN"
+jobs:
+  unit:
+    name: Unit
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [14, 16, 18, 19]
+    timeout-minutes: 10
+    steps:
+      - name: Setup
+        uses: CumulusDS/workflow-setup-action@v2
+        with:
+          nodeVersion: ${{ matrix.node }}
+          npmToken: ${{ secrets[inputs.npmjsToken] }}
+          ref: ${{ inputs.ref }}
+          fetch-depth: ${{ inputs.fetchDepth }}
+          packageManager: ${{ inputs.packageManager }}
+      - name: Build
+        id: build
+        run:  yarn workspace @${{ inputs.workspace }} build
+        shell: bash
+      # CumulusDS/yarn-test-action
+      - name: Check Licenses
+        id: check-licenses
+        run: yarn build:license-checker
+        shell: bash
+      - name: Yarn test
+        id: yarn-test
+        run:  yarn workspace @${{ inputs.workspace }} test
+        shell: bash
+      - name: Upload artifact
+        if: always()
+        uses: Cumulusds/unit-end-action@v1

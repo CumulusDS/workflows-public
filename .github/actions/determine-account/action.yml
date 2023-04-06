@@ -3,12 +3,14 @@ description: "determine stage"
 runs:
   using: composite
   steps:
+    - run: echo "FEATURE STAGE IS $FEATURE_STAGE"
+      shell: bash
     - name: Determine Account
       id: account
       run: |
-        if [ "${FEATURE_STAGE}" == "prod" ]; then
-          echo "AWS_ACCOUNT=${PROD}" >> $GITHUB_ENV
+        if [ "$FEATURE_STAGE" == "prod" ]; then
+          echo "AWS_ACCOUNT=$PROD" >> $GITHUB_ENV
         else
-          echo "AWS_ACCOUNT=${DEV}" >> $GITHUB_ENV
+          echo "AWS_ACCOUNT=$DEV" >> $GITHUB_ENV
         fi
       shell: bash

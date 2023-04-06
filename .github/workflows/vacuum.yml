@@ -1,6 +1,47 @@
 name: Stale Stack Cleanup
 on:
-  workflow_call
+  workflow_call:
+    inputs:
+      file:
+        description: "File to get yaml properties from if not defined with the service input Required: false Default: 'serverless.yml'"
+        required: false
+        type: string
+        default: "serverless.yml"
+      role:
+        description: "Role to assume for integration testing"
+        required: false
+        type: string
+        default: "ContinuousIntegration"
+      hyphen:
+        description: "Is the role-name hyphenated?"
+        required: false
+        type: string
+        default: "false"
+      durationSeconds:
+        description: "Duration in seconds to assume role for"
+        required: false
+        type: string
+        default: "1200"
+      npmjsToken:
+        description: "NPMJS auth token"
+        required: false
+        type: string
+        default: "NODE_AUTH_TOKEN"
+      accountId:
+        description: "Account ID.  Should only be dev"
+        required: false
+        type: string
+        default: "STS_DEV_AWS_ACCOUNT_ID"
+      awsAccessKeyId:
+        description: "Key ID"
+        required: false
+        type: string
+        default: "AWS_ACCESS_KEY_ID"
+      awsSecretAccessKey:
+        description: "Key secret"
+        required: false
+        type: string
+        default: "AWS_SECRET_ACCESS_KEY"
 jobs:
   cleanup:
     name: Stack Cleanup
@@ -17,10 +58,11 @@ jobs:
         id: cleanup
         uses: CumulusDS/stack-cleanup-action@v1
         with:
+          file: ${{ inputs.file }}
           region: ${{ matrix.region }}
-          role: "ContinuousIntegration"
-          hyphen: false
-          account_id: ${{ secrets.STS_DEV_AWS_ACCOUNT_ID }}
-          duration_seconds: 1800
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role: ${{ inputs.role }}
+          hyphen: ${{ inputs.hyphen }}
+          account_id: ${{ secrets[inputs.accountId] }}
+          duration_seconds: ${{ inputs.durationSeconds }}
+          aws_access_key_id: ${{ secrets[inputs.AWS_ACCESS_KEY_ID] }}
+          aws_secret_access_key: ${{ secrets[inputs.AWS_SECRET_ACCESS_KEY] }}

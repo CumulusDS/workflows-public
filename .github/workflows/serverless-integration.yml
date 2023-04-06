@@ -55,8 +55,8 @@ on:
         required: false
         type: string
         default: "1200"
-      npmToken:
-        description: "NPM token"
+      npmjsToken:
+        description: "NPMJS auth token"
         required: false
         type: string
         default: "NODE_AUTH_TOKEN"
@@ -86,7 +86,7 @@ jobs:
         uses: CumulusDS/workflow-setup-action@v2
         with:
           nodeVersion: ${{ inputs.nodeVersion }}
-          npmToken: ${{ secrets[inputs.npmToken] }}
+          npmToken: ${{ secrets[inputs.npmjsToken] }}
           ref: ${{ inputs.ref }}
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}
@@ -94,7 +94,6 @@ jobs:
         id: account
         uses: CumulusDS/workflows/.github/actions/determine-account@reusable-test
         env:
-          FEATURE_STAGE: ${{ matrix.stage }}
           DEV: ${{ secrets.STS_DEV_AWS_ACCOUNT_ID }}
           PROD: ${{ secrets.STS_PROD_AWS_ACCOUNT_ID }}
       - name: Assume Role

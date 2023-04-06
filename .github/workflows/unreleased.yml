@@ -1,10 +1,9 @@
 name: Unreleased
-on:
-  workflow_call
+on: [workflow_call]
 jobs:
   unreleased:
     name: Changes
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
     steps:
       - name: Checkout

@@ -1,12 +1,17 @@
-name: Serverless Unit
+name: Package Publish
 on:
   workflow_call:
     inputs:
+      workspace:
+        description: "workspace to run in"
+        required: false
+        type: string
+        default: ""
       nodeVersion:
         description: "Version of Node to use"
         required: false
         type: string
-        default: "16"
+        default: "14"
       ref:
         description: "Ref to checkout.  Should be blank in most cases to let the system determine"
         required: false
@@ -27,11 +32,16 @@ on:
         required: false
         type: string
         default: "NODE_AUTH_TOKEN"
+      npmjsPublishToken:
+        description: "NPMJS token with publishing permissions"
+        required: false
+        type: string
+        default: "NODE_PUBLISH_TOKEN"
 jobs:
-  unit:
-    name: Unit
+  publish:
+    name: Publish
     runs-on: ubuntu-22.04
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - name: Setup
         uses: CumulusDS/workflow-setup-action@v2
@@ -41,7 +51,11 @@ jobs:
           ref: ${{ inputs.ref }}
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}
-      - name: Yarn Test
-        uses: CumulusDS/yarn-test-action@v1
-      - name: Upload
-        uses: CumulusDS/unit-end-action@v1
+      - name: set node publish token
+        uses: CumulusDS/workflows/.github/actions/set-publish-token@reusable-test
+        with:
+          npmjsPublishToken: ${{ secrets[inputs.npmjsPublishToken] }}
+      - name: Build
+        run: yarn run build
+      - name: Publish
+        run: yarn run publish

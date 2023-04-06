@@ -1,0 +1,63 @@
+name: Package Publish
+on:
+  workflow_call:
+    inputs:
+      githubEventName:
+        required: false
+        type: string
+        default: ${{ github.event_name }}
+      fetchDepth:
+        description: "Checkout fetch depth"
+        required: false
+        type: string
+        default: "0"
+      packageManager:
+        description: "Package manager to use.  yarn3 vs yarn"
+        required: false
+        type: string
+        default: "yarn3"
+      npmjsToken:
+        description: "NPMJS auth token"
+        required: false
+        type: string
+        default: "NODE_AUTH_TOKEN"
+      npmjsPublishToken:
+        description: "NPMJS token with publishing permissions"
+        required: false
+        type: string
+        default: "NODE_PUBLISH_TOKEN"
+      nodeVersion:
+        description: "Version of Node to use"
+        required: false
+        type: string
+        default: "16"
+jobs:
+  prerelease:
+    name: Publish Prerelease
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - name: Set feature stage
+        id: set-feature-stage
+        uses: CumulusDS/feature-stage-action@v2
+        with:
+          githubEventName: ${{ inputs.githubEventName }}
+      - name: Setup
+        uses: CumulusDS/workflow-setup-action@v2
+        with:
+          nodeVersion: ${{ inputs.nodeVersion }}
+          npmToken: ${{ secrets[inputs.npmjsToken] }}
+          fetch-depth: ${{ inputs.fetchDepth }}
+          packageManager: ${{ inputs.packageManager }}
+      - name: set node publish token
+        uses: CumulusDS/workflows/.github/actions/set-publish-token@reusable-test
+        with:
+          npmjsPublishToken: ${{ secrets[inputs.npmjsPublishToken] }}
+      - name: Set prerelease version
+        run: | 
+          yarn run prerelease ${{ env.FEATURE_STAGE }}
+          yarn run version:prerelease --prerelease ${{ env.FEATURE_STAGE }}
+      - name: Publish
+        run: yarn run publish:prerelease --tag ${{ env.FEATURE_STAGE }}
+      - name: Summary
+        run: echo "### Published version $(jq .version package.json) to NPM" >> $GITHUB_STEP_SUMMARY

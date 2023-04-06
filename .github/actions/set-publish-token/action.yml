@@ -1,0 +1,23 @@
+name: 'set-publish-token'
+description: "Move away from read-only token to use publish token"
+inputs:
+  packageManager:
+    description: "Package manager to use.  yarn3 vs yarn"
+    required: false
+    default: "yarn3"
+  npmjsPublishToken:
+    description: "NPMJS token with publishing permissions"
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: yarn v1 publish token
+      id: yarn-set-publish-token
+      if: inputs.packageManager == 'yarn'
+      run: echo "//registry.npmjs.org/:_authToken=${{ inputs.npmjsPublishToken }}" >> ~/.npmrc
+      shell: bash
+    - name: yarn v3 publish token
+      id: yarn3-set-publish-token
+      if: inputs.packageManager == 'yarn3'
+      run: yarn config set npmAuthToken ${{ inputs.npmjsPublishToken }} --home
+      shell: bash

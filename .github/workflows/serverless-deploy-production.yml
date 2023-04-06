@@ -1,0 +1,31 @@
+name: Serverless Integration
+on: [workflow_call]
+jobs:
+  preNotifier:
+    name: Release Begin Notifier
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - name: Notify Slack channels production release has begun
+        uses: CumulusDS/notify-release-begin-action@v1
+        with:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+  deploy:
+    name: Deploy
+    uses: CumulusDS/workflows/.github/workflows/serverless-deploy.yml@reusable-test
+    secrets: inherit
+#  notify:
+#    name: Release Notifier
+#    runs-on: ubuntu-22.04
+#    timeout-minutes: 10
+#    needs:
+#      - preNotifier
+#      - deploy
+#    if: always()
+#    steps:
+#      - name: Notify Slack channels production release has completed
+#        uses: CumulusDS/notify-release-end-action@v1
+#        with:
+#          TOKEN: ${{ secrets.PRIOR_VERSION_TOKEN }}
+#          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+#          MATRIX: ${{ toJson(needs.matrix.outputs.matrix) }} # releases will be static matrices
