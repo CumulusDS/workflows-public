@@ -80,17 +80,12 @@ jobs:
     name: Build Matrix
     runs-on: ubuntu-22.04
     outputs:
-      #matrix: ${{ steps.set-matrix.outputs.matrix }}
       stage: ${{ steps.feature.outputs.stage }}
       service: ${{ steps.serverless.outputs.stage }}
       matrixRegion: ${{ steps.set-matrix.outputs.matrixRegions }}
       matrixStage:  ${{ steps.set-matrix.outputs.matrixStages }}
     timeout-minutes: 5
     steps:
-      - name: debug
-        run: |
-          echo "githubEventAction is ${{ inputs.githubEventAction }}"
-          echo "githubEventName is ${{ inputs.githubEventName }}"
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -112,7 +107,6 @@ jobs:
         with:
           githubEventAction: ${{ inputs.githubEventAction }}
           loneRegion: ${{ inputs.loneRegion }}
-          stage: ${{ env.FEATURE_STAGE }}
   deploy:
     name: Deploy ${{ matrix.stage }} (${{ matrix.region }})
     runs-on: ubuntu-22.04
