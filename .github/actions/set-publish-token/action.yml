@@ -11,13 +11,10 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: yarn v1 publish token
-      id: yarn-set-publish-token
-      if: inputs.packageManager == 'yarn'
-      run: echo "//registry.npmjs.org/:_authToken=${{ inputs.npmjsPublishToken }}" >> ~/.npmrc
-      shell: bash
-    - name: yarn v3 publish token
-      id: yarn3-set-publish-token
-      if: inputs.packageManager == 'yarn3'
-      run: yarn config set npmAuthToken ${{ inputs.npmjsPublishToken }} --home
+    - name: set publish token
+      id: set-publish-token
+      run: ${{ github.action_path }}/set-publish-token
+      env:
+        packageManager: ${{ inputs.packageManager }}
+        token: ${{ inputs.npmjsPublishToken }}
       shell: bash

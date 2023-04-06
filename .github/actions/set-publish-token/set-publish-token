@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [[ "$packageManager" == "yarn" ]]; then
+  echo "//registry.npmjs.org/:_authToken=$token" >> ~/.npmrc
+elif [[ "$packageManager" == "yarn3" ]]; then
+  yarn config set npmAuthToken $token --home
+else
+  echo "Please provide a supported package manager"
+fi
