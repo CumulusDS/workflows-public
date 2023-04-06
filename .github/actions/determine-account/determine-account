@@ -1,0 +1,9 @@
+#!/bin/bash
+
+echo "FEATURE_STAGE IS $FEATURE_STAGE"
+
+if [[ "$FEATURE_STAGE" == "prod" ]]; then
+  echo "AWS_ACCOUNT=$PROD" >> $GITHUB_ENV
+else
+  echo "AWS_ACCOUNT=$DEV" >> $GITHUB_ENV
+fi
