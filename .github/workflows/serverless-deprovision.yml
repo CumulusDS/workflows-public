@@ -111,6 +111,8 @@ jobs:
     name: Deprovision
     runs-on: ubuntu-22.04
     timeout-minutes: 10
+    needs:
+      - matrix
     strategy:
       matrix:
         stage: ${{fromJson(needs.matrix.outputs.matrixStage)}}
