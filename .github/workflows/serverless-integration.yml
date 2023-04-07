@@ -92,7 +92,7 @@ jobs:
           packageManager: ${{ inputs.packageManager }}
       - name: determine AWS account
         id: account
-        uses: CumulusDS/workflows/.github/actions/determine-account@reusable-test
+        uses: CumulusDS/workflows/.github/actions/determine-account@master
         env:
           DEV: ${{ secrets.STS_DEV_AWS_ACCOUNT_ID }}
           PROD: ${{ secrets.STS_PROD_AWS_ACCOUNT_ID }}

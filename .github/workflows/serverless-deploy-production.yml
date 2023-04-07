@@ -12,7 +12,7 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
   deploy:
     name: Deploy
-    uses: CumulusDS/workflows/.github/workflows/serverless-deploy.yml@reusable-test
+    uses: CumulusDS/workflows/.github/workflows/serverless-deploy.yml@master
     secrets: inherit
 #  notify:
 #    name: Release Notifier

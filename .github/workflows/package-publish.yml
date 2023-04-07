@@ -52,7 +52,7 @@ jobs:
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}
       - name: set node publish token
-        uses: CumulusDS/workflows/.github/actions/set-publish-token@reusable-test
+        uses: CumulusDS/workflows/.github/actions/set-publish-token@master
         with:
           npmjsPublishToken: ${{ secrets[inputs.npmjsPublishToken] }}
       - name: Build

@@ -128,7 +128,7 @@ jobs:
           packageManager: ${{ inputs.packageManager }}
       - name: determine AWS account
         id: account
-        uses: CumulusDS/workflows/.github/actions/determine-account@reusable-test
+        uses: CumulusDS/workflows/.github/actions/determine-account@master
         env:
           FEATURE_STAGE: ${{ matrix.stage }}
           DEV: ${{ secrets.STS_DEV_AWS_ACCOUNT_ID }}
