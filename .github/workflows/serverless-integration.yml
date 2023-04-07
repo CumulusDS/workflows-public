@@ -2,6 +2,10 @@ name: Serverless Integration
 on:
   workflow_call:
     inputs:
+      config:
+        required: false
+        type: string
+        default: "serverless.yml"
       githubEventName:
         required: false
         type: string
@@ -100,6 +104,7 @@ jobs:
         id: role
         uses: CumulusDS/assume-role-action@v1
         with:
+          file: ${{ inputs.config }}
           role: ${{ inputs.role }}
           hyphen: ${{ inputs.hyphen }}
           region: ${{ inputs.region }}
