@@ -1,5 +1,90 @@
 name: Serverless Integration
-on: [workflow_call]
+on:
+  workflow_call:
+    inputs:
+      config:
+        required: false
+        type: string
+        default: "serverless.yml"
+      githubEventName:
+        required: false
+        type: string
+        default: "${{ github.event_name }}"
+      githubEventAction:
+        description: 'Github event action'
+        required: false
+        type: string
+        default: "${{ github.event.action }}"
+      loneRegion:
+        description: "Should deployment only happen in one region?  If yes, provide that region"
+        required: false
+        type: string
+        default: ""
+      nodeVersion:
+        description: "Node version to use"
+        required: false
+        type: string
+        default: "16"
+      ref:
+        description: ""
+        required: false
+        type: string
+        default: ""
+      fetchDepth:
+        description: "Checkout fetch-depth"
+        required: false
+        type: string
+        default: "0"
+      packageManager:
+        description: "Package manager to use.  `yarn` or `yarn3`"
+        required: false
+        type: string
+        default: "yarn3"
+      role:
+        description: "Role to assume for integration testing"
+        required: false
+        type: string
+        default: "ContinuousIntegration"
+      hyphen:
+        description: "Is the role-name hyphenated?"
+        required: false
+        type: string
+        default: "false"
+      durationSeconds:
+        description: "Duration in seconds to assume role for"
+        required: false
+        type: string
+        default: "1200"
+      npmjsToken:
+        description: "NPMJS auth token"
+        required: false
+        type: string
+        default: "NODE_AUTH_TOKEN"
+      awsAccessKeyId:
+        description: "Key ID"
+        required: false
+        type: string
+        default: "AWS_ACCESS_KEY_ID"
+      awsSecretAccessKey:
+        description: "Key secret"
+        required: false
+        type: string
+        default: "AWS_SECRET_ACCESS_KEY"
+      stackPolicyFile:
+        description: "Stack policy file"
+        required: false
+        type: string
+        default: "templates/policies/serverless.json"
+      runsOnLabel:
+        description: "Runner label"
+        required: false
+        type: string
+        default: "ubuntu-latest-4-cores"
+      slackWebhook:
+        description: "slack webhook secret"
+        required: false
+        type: string
+        default: "SLACK_WEBHOOK"
 jobs:
   preNotifier:
     name: Release Begin Notifier
@@ -9,11 +94,28 @@ jobs:
       - name: Notify Slack channels production release has begun
         uses: CumulusDS/notify-release-begin-action@v1
         with:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK: ${{ secrets[inputs.skackWebhook] }}
   deploy:
     name: Deploy
     uses: CumulusDS/workflows/.github/workflows/serverless-deploy.yml@master
     secrets: inherit
+    with:
+      config: ${{ inputs.config }}
+      githubEventName: ${{ inputs.githubEventName }}
+      githubEventAction: ${{ inputs.githubEventAction }}
+      loneRegion: ${{ inputs.loneRegion }}
+      nodeVersion: ${{ inputs.nodeVersion }}
+      ref: ${{ inputs.ref }}
+      fetchDepth: ${{ inputs.fetchDepth }}
+      packageManager: ${{ inputs.packageManager }}
+      role: ${{ inputs.role }}
+      hyphen: ${{ inputs.hyphen }}
+      durationSeconds: ${{ inputs.durationSeconds }}
+      npmjsToken: ${{ inputs.npmjsToken }}
+      awsAccessKeyId: ${{ inputs.awsAccessKeyId }}
+      awsSecretAccessKey: ${{ inputs.awsSecretAccessKey }}
+      stackPolicyFile: ${{ inputs.stackPolicyFile }}
+      runsOnLabel: ${{ inputs.runsOnLabel }}
 #  notify:
 #    name: Release Notifier
 #    runs-on: ubuntu-22.04
@@ -28,4 +130,4 @@ jobs:
 #        with:
 #          TOKEN: ${{ secrets.PRIOR_VERSION_TOKEN }}
 #          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-#          MATRIX: ${{ toJson(needs.matrix.outputs.matrix) }} # releases will be static matrices
+#          MATRIX: ${{ toJson(needs.matrix.outputs.matrix) }} # releases wigsll be static matrices
