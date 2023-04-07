@@ -1,0 +1,28 @@
+name: Dependabot AutoMerger
+on: [workflow_call]
+jobs:
+  dependabot-automerge:
+    name: Dependabot AutoMerger
+    if: github.actor == 'dependabot[bot]'
+    timeout-minutes: 20
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Wait
+        uses: kibertoad/wait-action@1.0.1
+        with:
+          time: 30
+      - name: Automerge
+        id: automerge
+        uses: "pascalgn/automerge-action@v0.15.6"
+        env:
+          GITHUB_TOKEN: "${{ secrets.RELEASE_TOKEN }}"
+          MERGE_LABELS: "dependencies,!config,!actions,!bug,!cloudformation,!documentation,!duplicate,!enhancement,!good first issue,!help wanted,!invalid,!prod,!question,!wontfix,!wip,!work in progress"
+          MERGE_FILTER_AUTHOR: "dependabot[bot]"
+          MERGE_FORKS: "false"
+          MERGE_RETRIES: "10"
+          MERGE_RETRY_SLEEP: "60000"
+          UPDATE_LABELS: ""
+          UPDATE_METHOD: "merge"
+      - name: feedback
+        if: steps.automerge.outputs.mergeResult == 'merged'
+        run: echo "Pull request ${{ steps.automerge.outputs.pullRequestNumber }} merged!"
