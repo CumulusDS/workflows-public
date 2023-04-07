@@ -136,11 +136,6 @@ jobs:
           duration_seconds: ${{ inputs.durationSeconds }}
           aws_access_key_id: ${{ secrets[inputs.awsAccessKeyId] }}
           aws_secret_access_key: ${{ secrets[inputs.awsSecretAccessKey] }}
-      - name: Set feature stage
-        id: set-feature-stage
-        uses: CumulusDS/feature-stage-action@v2
-        with:
-          githubEventRef: ${{ inputs.githubEventRef }}
       - name: serverless remove
         uses: CumulusDS/sls-deploy-remove-action@v1
         with:
