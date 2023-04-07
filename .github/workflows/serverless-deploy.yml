@@ -75,6 +75,11 @@ on:
         required: false
         type: string
         default: "templates/policies/serverless.json"
+      runsOnLabel:
+        description: "Runner label"
+        required: false
+        type: string
+        default: "ubuntu-latest-4-cores"
 jobs:
   matrix:
     name: Build Matrix
@@ -109,7 +114,9 @@ jobs:
           loneRegion: ${{ inputs.loneRegion }}
   deploy:
     name: Deploy ${{ matrix.stage }} (${{ matrix.region }})
-    runs-on: ubuntu-22.04
+    runs-on:
+      labels:
+        - ${{ inputs.runsOnLabel }}
     timeout-minutes: 20
     needs: matrix
     strategy:
