@@ -3,51 +3,147 @@ on:
   workflow_call:
     inputs:
       config:
+        required: false
         type: string
-        required: true
+        default: "serverless.yml"
+      githubEventName:
+        required: false
+        type: string
+        default: "${{ github.event_name }}"
+      githubEventAction:
+        description: 'Github event action'
+        required: false
+        type: string
+        default: "${{ github.event.action }}"
       githubEventRef:
+        required: false
         type: string
-        required: true
+        default: "${{ github.event.ref }}"
+      loneRegion:
+        description: "Should deployment only happen in one region?  If yes, provide that region"
+        required: false
+        type: string
+        default: ""
+      nodeVersion:
+        description: "Node version to use"
+        required: false
+        type: string
+        default: "16"
+      npmjsToken:
+        description: "NPMJS auth token"
+        required: false
+        type: string
+        default: "NODE_AUTH_TOKEN"
+      fetchDepth:
+        description: "Checkout fetch-depth"
+        required: false
+        type: string
+        default: "0"
+      packageManager:
+        description: "Package manager to use.  `yarn` or `yarn3`"
+        required: false
+        type: string
+        default: "yarn3"
+      role:
+        description: "Role to assume for integration testing"
+        required: false
+        type: string
+        default: "ContinuousIntegration"
+      hyphen:
+        description: "Is the role-name hyphenated?"
+        required: false
+        type: string
+        default: "false"
+      accountIdSecret:
+        description: "AccountID secret for reference"
+        required: false
+        type: string
+        default: "STS_DEV_AWS_ACCOUNT_ID"
+      durationSeconds:
+        description: "Duration in seconds to assume role for"
+        required: false
+        type: string
+        default: "1200"
+      awsAccessKeyId:
+        description: "Key ID"
+        required: false
+        type: string
+        default: "AWS_ACCESS_KEY_ID"
+      awsSecretAccessKey:
+        description: "Key secret"
+        required: false
+        type: string
+        default: "AWS_SECRET_ACCESS_KEY"
 jobs:
+  matrix:
+    name: Build Matrix
+    runs-on: ubuntu-22.04
+    outputs:
+      stage: ${{ steps.feature.outputs.stage }}
+      service: ${{ steps.serverless.outputs.stage }}
+      matrixRegion: ${{ steps.set-matrix.outputs.matrixRegions }}
+      matrixStage:  ${{ steps.set-matrix.outputs.matrixStages }}
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: ${{ inputs.fetchDepth }}
+      - name: Get serverless properties
+        id: serverless
+        uses: CumulusDS/get-yaml-paths-action@v1
+        with:
+          file: ${{ inputs.config }}
+          service: service
+      - name: Set feature stage
+        id: set-feature-stage
+        uses: CumulusDS/feature-stage-action@v2
+        with:
+          githubEventName: ${{ inputs.githubEventName }}
+          githubEventRef: ${{ inputs.githubEventRef }}
+      - name: set matrix
+        id: set-matrix
+        uses: CumulusDS/set-matrix-action@master
+        with:
+          githubEventAction: ${{ inputs.githubEventAction }}
+          loneRegion: ${{ inputs.loneRegion }}
   deprovision:
     name: Deprovision
     runs-on: ubuntu-22.04
     timeout-minutes: 10
+    needs:
+      - matrix
     strategy:
       matrix:
-        region:
-          - us-east-1
-          - us-east-2
+        stage: ${{fromJson(needs.matrix.outputs.matrixStage)}}
+        region: ${{fromJson(needs.matrix.outputs.matrixRegion)}}
       fail-fast: false
     steps:
       - name: Setup
         uses: CumulusDS/workflow-setup-action@v2
         with:
-          nodeVersion: 16
-          npmToken: ${{ secrets.NODE_AUTH_TOKEN }}
-          fetch-depth: 0
-          packageManager: yarn3
+          nodeVersion: ${{ inputs.nodeVersion }}
+          npmToken: ${{ secrets[inputs.npmjsToken] }}
+          fetch-depth: ${{ inputs.fetch-depth }}
+          packageManager: ${{ inputs.packageManager }}
       - name: Assume CI Role
         id: role
         uses: CumulusDS/assume-role-action@v1
         with:
-          role: "ContinuousIntegration"
-          hyphen: false
+          file: ${{ inputs.config }}
+          role: ${{ inputs.role }}
+          hyphen: ${{ inputs.hyphen }}
           region: "${{ matrix.region }}"
-          account_id: ${{ secrets.STS_DEV_AWS_ACCOUNT_ID }}
-          duration_seconds: 1200
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      - name: Set feature stage
-        id: set-feature-stage
-        uses: CumulusDS/feature-stage-action@v2
-        with:
-          githubEventRef: ${{ inputs.githubEventRef }}
+          account_id: ${{ secrets[inputs.accountIdSecret] }}
+          duration_seconds: ${{ inputs.durationSeconds }}
+          aws_access_key_id: ${{ secrets[inputs.awsAccessKeyId] }}
+          aws_secret_access_key: ${{ secrets[inputs.awsSecretAccessKey] }}
       - name: serverless remove
         uses: CumulusDS/sls-deploy-remove-action@v1
         with:
           service: ${{ steps.role.outputs.service }}
-          stage: ${{ steps.set-feature-stage.outputs.stage }}
+          stage: ${{ matrix.stage }}
           action: remove
           verbose: true
           debug: false
+          args: --config ${{ inputs.config }}
