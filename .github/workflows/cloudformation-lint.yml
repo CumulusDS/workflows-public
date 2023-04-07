@@ -1,0 +1,223 @@
+name: CloudFormation Linting
+on:
+  workflow_call:
+    inputs:
+      file:
+        description: "file to lint"
+        required: true
+        type: string
+      config:
+        required: false
+        type: string
+        default: "serverless.yml"
+      githubEventName:
+        required: false
+        type: string
+        default: "${{ github.event_name }}"
+      githubEventRef:
+        required: false
+        type: string
+        default: "${{ github.event.ref }}"
+      githubEventPullRequestNumber:
+        required: false
+        type: string
+        default: "${{ github.event.pull_request.number }}"
+      nodeVersion:
+        description: "Version of Node to use"
+        required: false
+        type: string
+        default: "16"
+      ref:
+        description: "Ref to checkout.  Should be blank in most cases to let the system determine"
+        required: false
+        type: string
+        default: ""
+      fetchDepth:
+        description: "Checkout fetch depth"
+        required: false
+        type: string
+        default: "0"
+      packageManager:
+        description: "Package manager to use.  yarn3 vs yarn"
+        required: false
+        type: string
+        default: "yarn3"
+      npmjsToken:
+        description: "NPMJS auth token"
+        required: false
+        type: string
+        default: "NODE_AUTH_TOKEN"
+      rubyVersion:
+        description: "Ruby version to install"
+        required: false
+        type: string
+        default: "2.7"
+      bundlerCache:
+        description: "Bundler-cache"
+        required: false
+        type: string
+        default: "false"
+      role:
+        description: "Role to assume for integration testing"
+        required: false
+        type: string
+        default: "ContinuousIntegration"
+      hyphen:
+        description: "Is the role-name hyphenated?"
+        required: false
+        type: string
+        default: "false"
+      region:
+        description: "Region to assume role in"
+        required: false
+        type: string
+        default: "us-east-1"
+      accountIdSecret:
+        description: "AccountID secret for reference"
+        required: false
+        type: string
+        default: "STS_DEV_AWS_ACCOUNT_ID"
+      durationSeconds:
+        description: "Duration in seconds to assume role for"
+        required: false
+        type: string
+        default: "1200"
+      awsAccessKeyId:
+        description: "Key ID"
+        required: false
+        type: string
+        default: "AWS_ACCESS_KEY_ID"
+      awsSecretAccessKey:
+        description: "Key secret"
+        required: false
+        type: string
+        default: "AWS_SECRET_ACCESS_KEY"
+jobs:
+  cloudformation:
+    name: CloudFormation Lint
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - name: Setup
+        uses: CumulusDS/workflow-setup-action@v2
+        with:
+          nodeVersion: ${{ inputs.nodeVersion }}
+          npmToken: ${{ secrets[inputs.npmjsToken] }}
+          fetch-depth: ${{ inputs.fetchDepth }}
+          packageManager: ${{ inputs.packageManager }}
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ inputs.rubyVersion }}
+          bundler-cache: ${{ inputs.bundlerCache }}
+      - name: Assume Role
+        id: role
+        uses: CumulusDS/assume-role-action@v1
+        with:
+          file: ${{ inputs.config }}
+          role: ${{ inputs.role }}
+          hyphen: ${{ inputs.hyphen }}
+          region: "${{ inputs.region }}"
+          account_id: ${{ secrets[inputs.accountIdSecret] }}
+          duration_seconds: ${{ inputs.durationSeconds }}
+          aws_access_key_id: ${{ secrets[inputs.awsAccessKeyId] }}
+          aws_secret_access_key: ${{ secrets[inputs.awsSecretAccessKey] }}
+      - name: Set feature stage
+        uses: CumulusDS/feature-stage-action@v2
+        with:
+          githubEventName: ${{ inputs.githubEventName }}
+      - name: fetch all
+        run: git fetch --all
+      - name: fetch master
+        run: |
+          if [[ "${{ inputs.githubEventRef }}" == "refs/heads/master" ]]; then
+            echo "branch is already master"
+          else
+            git fetch origin master:master
+          fi
+      - name: Git List Updated
+        run: yarn git-list-updated
+      - name: check for updated files
+        id: files
+        run: |
+          case $(yarn git-list-updated | grep -Fqx "${{ inputs.file }}" >/dev/null; echo $?) in
+            0)  echo "${{ inputs.file }} is updated"
+                echo "UPDATED=true" >> $GITHUB_ENV
+                echo "updated=true" >> $GITHUB_OUTPUT
+                ;;
+            1)  echo "${{ inputs.file }} not updated"
+                echo "UPDATED=false" >> $GITHUB_ENV
+                echo "updated=false" >> $GITHUB_OUTPUT
+                ;;
+            *)  echo "ERROR";;
+          esac
+      - name: debug - show outputs
+        run: |
+          echo "${{ inputs.file }} updated - ${{ steps.files.outputs.updated }}"
+          echo "steps.role.outputs.service: ${{ steps.role.outputs.service }}"
+      - name: Package ${{ inputs.file }} for linting
+        uses: CumulusDS/sls-deploy-remove-action@v1
+        if: always() && startsWith(inputs.file, 'serverless') && endsWith(inputs.file, '.yml')
+        with:
+          action: package
+          service: ${{ steps.role.outputs.service }}
+          region: ${{ inputs.region }}
+          stage: ${{ env.FEATURE_STAGE }}
+          args: --config ${{ inputs.config }}
+      - name: set default scan path
+        if: always()
+        run: echo "FILEPATH=${{ inputs.file }}" >> $GITHUB_ENV
+      - name: set serverless scan path
+        if: always() && startsWith(inputs.file, 'serverless') && endsWith(inputs.file, '.yml')
+        run: echo "FILEPATH=.serverless/cloudformation-template-update-stack.json" >> $GITHUB_ENV
+      # comments
+      - name: cfn-nag-scan ${{ inputs.file }}
+        id: cfn-nag
+        uses: CumulusDS/cfn-nag-action@v1
+        if: always() && env.UPDATED == 'true'
+        with:
+          path: ${{ env.FILEPATH }}
+          args: --print-suppression --output-format txt
+      - name: cfn-lint ${{ inputs.file }}
+        id: cfn-lint
+        uses: CumulusDS/cfn-lint-action@master
+        if: always() && env.UPDATED == 'true'
+        with:
+          args: ${{ env.FILEPATH }} -I --format pretty
+      - name: Check for existing cfn ${{ inputs.file }} comment on PR
+        id: fc
+        uses: peter-evans/find-comment@v2
+        if: always() && inputs.githubEventName == 'pull_request' && env.UPDATED == 'true'
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: "cfn-lint/cfn-nag results: ${{ inputs.file }}"
+      - name: Create/Update PR comment
+        id: comment
+        uses: peter-evans/create-or-update-comment@v2
+        if: always() && inputs.githubEventName == 'pull_request' && env.UPDATED == 'true'
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ inputs.githubEventPullRequestNumber }}
+          body: |
+            # cfn-lint/cfn-nag results: ${{ inputs.file }}
+            ## cfn-lint
+
+            <details open><summary>Click to toggle visibility</summary>
+
+            ```zsh
+            ${{ steps.cfn-lint.outputs.results }}
+            ```
+
+            </details>
+
+            ## cfn-nag-scan
+
+            <details open><summary>Click to toggle visibility</summary>
+
+            ```zsh
+            ${{ steps.cfn-nag.outputs.results }}
+            ```
+
+            </details>
+          edit-mode: replace
