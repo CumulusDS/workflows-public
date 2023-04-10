@@ -64,5 +64,5 @@ jobs:
           hyphen: ${{ inputs.hyphen }}
           account_id: ${{ secrets[inputs.accountId] }}
           duration_seconds: ${{ inputs.durationSeconds }}
-          aws_access_key_id: ${{ secrets[inputs.AWS_ACCESS_KEY_ID] }}
-          aws_secret_access_key: ${{ secrets[inputs.AWS_SECRET_ACCESS_KEY] }}
+          aws_access_key_id: ${{ secrets[inputs.awsAccessKeyId] }}
+          aws_secret_access_key: ${{ secrets[inputs.awsSecretAccessKey] }}
