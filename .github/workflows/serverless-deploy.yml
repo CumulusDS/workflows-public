@@ -80,6 +80,16 @@ on:
         required: false
         type: string
         default: "ubuntu-latest-4-cores"
+    outputs:
+      matrixStages:
+        description: "Stage used in output matrix"
+        value: ${{ jobs.matrix.outputs.matrixStage }}
+      matrixRegions:
+        description: "List of matrix regions set in output matrix"
+        value: ${{ jobs.matrix.outputs.matrixRegion }}
+      service:
+        description: "The service this called workflow is running for"
+        value: ${{ jobs.matrix.outputs.service }}
 jobs:
   matrix:
     name: Build Matrix
