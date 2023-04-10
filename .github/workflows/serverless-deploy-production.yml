@@ -136,4 +136,4 @@ jobs:
           TOKEN: ${{ secrets[inputs.priorVersionToken] }}
           SLACK_WEBHOOK: ${{ secrets[inputs.slackWebhook] }}
           MATRIX_REGIONS: ${{ toJson(needs.deploy.outputs.matrixRegions) }}
-          MATRIX_STAGE: ${{ toJson(needs.deploy.outputs.matrixStage) }}
+          MATRIX_STAGE: ${{ toJson(needs.deploy.outputs.matrixStages) }}
