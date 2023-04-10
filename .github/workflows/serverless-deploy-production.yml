@@ -85,6 +85,11 @@ on:
         required: false
         type: string
         default: "SLACK_WEBHOOK"
+      priorVersionToken:
+        description: "prior version token"
+        required: false
+        type: string
+        default: PRIOR_VERSION_TOKEN
 jobs:
   preNotifier:
     name: Release Begin Notifier
@@ -128,7 +133,7 @@ jobs:
       - name: Notify Slack channels production release has completed
         uses: CumulusDS/notify-release-end-action@separate-matrix-stage-regions
         with:
-          TOKEN: ${{ secrets.PRIOR_VERSION_TOKEN }}
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          TOKEN: ${{ secrets[inputs.priorVersionToken] }}
+          SLACK_WEBHOOK: ${{ secrets[inputs.slackWebhook] }}
           MATRIX_REGIONS: ${{ toJson(needs.deploy.outputs.matrixRegions) }}
           MATRIX_STAGE: ${{ toJson(needs.deploy.outputs.matrixStage) }}
