@@ -56,6 +56,14 @@ jobs:
         with:
           npmjsPublishToken: ${{ secrets[inputs.npmjsPublishToken] }}
       - name: Build
+        if: inputs.packageManager == 'yarn3'
         run: yarn run build
       - name: Publish
+        if: inputs.packageManager == 'yarn3'
+        run: yarn run publish
+      - name: Build
+        if: inputs.packageManager == 'yarn'
+        run: yarn run build
+      - name: Publish
+        if: inputs.packageManager == 'yarn'
         run: yarn run publish

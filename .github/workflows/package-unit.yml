@@ -47,7 +47,7 @@ jobs:
           packageManager: ${{ inputs.packageManager }}
       # build
       - name: Workspace Build
-        id: build
+        id: workspace-build
         if: inputs.workspace != ''
         run: yarn workspace @${{ inputs.workspace }} build
         shell: bash
