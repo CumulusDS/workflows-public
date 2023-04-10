@@ -89,7 +89,7 @@ on:
         description: "prior version token"
         required: false
         type: string
-        default: PRIOR_VERSION_TOKEN
+        default: "PRIOR_VERSION_TOKEN"
 jobs:
   preNotifier:
     name: Release Begin Notifier
