@@ -45,19 +45,33 @@ jobs:
           ref: ${{ inputs.ref }}
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}
+      # build
+      - name: Workspace Build
+        id: build
+        if: inputs.workspace != ''
+        run: yarn workspace @${{ inputs.workspace }} build
+        shell: bash
       - name: Build
         id: build
-        run:  yarn workspace @${{ inputs.workspace }} build
+        if: inputs.workspace == ''
+        run: yarn build
         shell: bash
       # CumulusDS/yarn-test-action
       - name: Check Licenses
         id: check-licenses
+        if: inputs.workspace != ''
         run: yarn build:license-checker
+        shell: bash
+      # test
+      - name: Yarn3 test
+        id: yarn3-test
+        if: inputs.workspace != ''
+        run:  yarn workspace @${{ inputs.workspace }} test
         shell: bash
       - name: Yarn test
         id: yarn-test
-        run:  yarn workspace @${{ inputs.workspace }} test
-        shell: bash
+        if: inputs.workspace == ''
+        uses: CumulusDS/yarn-test-action@v1
       - name: Upload artifact
         if: always()
-        uses: Cumulusds/unit-end-action@v1
+        uses: CumulusDS/unit-end-action@v1
