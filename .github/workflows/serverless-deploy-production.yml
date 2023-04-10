@@ -94,7 +94,7 @@ jobs:
       - name: Notify Slack channels production release has begun
         uses: CumulusDS/notify-release-begin-action@v1
         with:
-          SLACK_WEBHOOK: ${{ secrets[inputs.skackWebhook] }}
+          SLACK_WEBHOOK: ${{ secrets[inputs.slackWebhook] }}
   deploy:
     name: Deploy
     uses: CumulusDS/workflows/.github/workflows/serverless-deploy.yml@master
