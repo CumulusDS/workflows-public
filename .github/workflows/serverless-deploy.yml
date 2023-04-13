@@ -124,9 +124,7 @@ jobs:
           loneRegion: ${{ inputs.loneRegion }}
   deploy:
     name: Deploy ${{ matrix.stage }} (${{ matrix.region }})
-    runs-on:
-      labels:
-        - ${{ inputs.runsOnLabel }}
+    runs-on: ${{ inputs.runsOnLabel }}
     timeout-minutes: 20
     needs: matrix
     strategy:

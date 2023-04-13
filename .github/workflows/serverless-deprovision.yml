@@ -96,7 +96,7 @@ jobs:
           file: ${{ inputs.config }}
           service: service
       - name: Set feature stage
-        id: set-feature-stage
+        id: feature
         uses: CumulusDS/feature-stage-action@v2
         with:
           githubEventName: ${{ inputs.githubEventName }}
@@ -124,7 +124,7 @@ jobs:
         with:
           nodeVersion: ${{ inputs.nodeVersion }}
           npmToken: ${{ secrets[inputs.npmjsToken] }}
-          fetch-depth: ${{ inputs.fetch-depth }}
+          fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}
       - name: Assume CI Role
         id: role

@@ -37,11 +37,6 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     steps:
-      - name: Set feature stage
-        id: set-feature-stage
-        uses: CumulusDS/feature-stage-action@v2
-        with:
-          githubEventName: ${{ inputs.githubEventName }}
       - name: Setup
         uses: CumulusDS/workflow-setup-action@v2
         with:
@@ -49,9 +44,15 @@ jobs:
           npmToken: ${{ secrets[inputs.npmjsToken] }}
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}
+      - name: Set feature stage
+        id: set-feature-stage
+        uses: CumulusDS/feature-stage-action@v2
+        with:
+          githubEventName: ${{ inputs.githubEventName }}
       - name: set node publish token
         uses: CumulusDS/workflows/.github/actions/set-publish-token@master
         with:
+          packageManager: ${{ inputs.packageManager }}
           npmjsPublishToken: ${{ secrets[inputs.npmjsPublishToken] }}
       - name: Set prerelease version
         run: | 
