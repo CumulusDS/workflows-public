@@ -45,7 +45,7 @@ jobs:
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}
       - name: Set feature stage
-        id: set-feature-stage
+        id: feature
         uses: CumulusDS/feature-stage-action@v2
         with:
           githubEventName: ${{ inputs.githubEventName }}
@@ -55,10 +55,8 @@ jobs:
           packageManager: ${{ inputs.packageManager }}
           npmjsPublishToken: ${{ secrets[inputs.npmjsPublishToken] }}
       - name: Set prerelease version
-        run: | 
-          yarn run prerelease ${{ env.FEATURE_STAGE }}
-          yarn run version:prerelease --prerelease ${{ env.FEATURE_STAGE }}
+        run: yarn run prerelease ${{ steps.feature.outputs.stage }}
       - name: Publish
-        run: yarn run publish:prerelease --tag ${{ env.FEATURE_STAGE }}
+        run: yarn run publish:prerelease --tag ${{ steps.feature.outputs.stage }}
       - name: Summary
         run: echo "### Published version $(jq .version package.json) to NPM" >> $GITHUB_STEP_SUMMARY

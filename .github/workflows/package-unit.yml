@@ -2,11 +2,11 @@ name: Package Unit
 on:
   workflow_call:
     inputs:
-      workspace:
-        description: "workspace to run in"
+      workspaces:
+        description: "are workspaces enabled"
         required: false
         type: string
-        default: ""
+        default: "false"
       ref:
         description: "Ref to checkout.  Should be blank in most cases to let the system determine"
         required: false
@@ -63,14 +63,14 @@ jobs:
         run: yarn build:license-checker
         shell: bash
       # test
-      - name: Yarn3 test
-        id: yarn3-test
-        if: inputs.workspace != ''
-        run:  yarn workspace @${{ inputs.workspace }} test
+      - name: Yarn workspaces test
+        id: yarn-workspaces-test
+        if: inputs.workspaces == 'true'
+        run:  yarn workspace foreach run test
         shell: bash
       - name: Yarn test
         id: yarn-test
-        if: inputs.workspace == ''
+        if: inputs.workspace == 'false'
         uses: CumulusDS/yarn-test-action@v1
       - name: Upload artifact
         if: always()
