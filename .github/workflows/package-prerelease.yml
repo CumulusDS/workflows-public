@@ -57,6 +57,6 @@ jobs:
       - name: Set prerelease version
         run: yarn run prerelease ${{ steps.feature.outputs.stage }}
       - name: Publish
-        run: yarn run publish:prerelease --tag ${{ steps.feature.outputs.stage }}
+        run: yarn npm publish --tag ${{ steps.feature.outputs.stage }}
       - name: Summary
         run: echo "### Published version $(jq .version package.json) to NPM" >> $GITHUB_STEP_SUMMARY
