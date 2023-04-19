@@ -31,12 +31,12 @@ on:
         description: "NPMJS auth token"
         required: false
         type: string
-        default: "NODE_READ_ONLY_TOKEN"
+        default: "NPM_TOKEN_READ_ONLY"
       npmjsPublishToken:
         description: "NPMJS token with publishing permissions"
         required: false
         type: string
-        default: "NODE_PUBLISH_TOKEN"
+        default: "NPM_TOKEN_PUBLISH"
 jobs:
   publish:
     name: Publish
