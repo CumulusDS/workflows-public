@@ -46,7 +46,7 @@ on:
         description: "NPMJS auth token"
         required: false
         type: string
-        default: "NODE_AUTH_TOKEN"
+        default: "NPM_TOKEN_READ_ONLY"
       rubyVersion:
         description: "Ruby version to install"
         required: false

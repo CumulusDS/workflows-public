@@ -26,7 +26,7 @@ on:
         description: "NPMJS auth token"
         required: false
         type: string
-        default: "NODE_READ_ONLY_TOKEN"
+        default: "NPM_TOKEN_READ_ONLY"
 jobs:
   unit:
     name: Unit

@@ -1,0 +1,44 @@
+name: Prerelease delete
+on:
+  workflow_call:
+    inputs:
+      fetchDepth:
+        description: "Checkout fetch depth"
+        required: false
+        type: string
+      githubEventName:
+        required: false
+        type: string
+        default: "${{ github.event_name }}"
+      githubEventAction:
+        description: 'Github event action'
+        required: false
+        type: string
+        default: "${{ github.event.action }}"
+      npmjsPublishToken:
+        description: "NPMJS token with publishing permissions"
+        required: false
+        type: string
+        default: "NPM_TOKEN_PUBLISH"
+jobs:
+  remove-tag:
+    name: Remove distribution tag
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: ${{ inputs.fetchDepth }}
+      - name: Set feature stage
+        id: feature
+        uses: CumulusDS/feature-stage-action@v2
+        with:
+          githubEventName: ${{ inputs.githubEventName }}
+          githubEventRef: ${{ inputs.githubEventRef }}
+      - name: set node publish token
+        uses: CumulusDS/workflows/.github/actions/set-publish-token@master
+        with:
+          npmjsPublishToken: ${{ secrets[inputs.npmjsPublishToken] }}
+      - name: Untag
+        run: yarn run npm:tag:remove ${{ steps.feature.outputs.stage }}
