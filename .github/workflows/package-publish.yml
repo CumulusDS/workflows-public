@@ -54,5 +54,9 @@ jobs:
         run: yarn build
       - name: Publish
         run: yarn npm publish
-      - name: Summary
+      - name: Summary (succesS)
+        if: success()
         run: echo "### Published version $(jq .version package.json) to NPM" >> $GITHUB_STEP_SUMMARY
+      - name: Summary (failure)
+        if: failure()
+        run: echo "### Failed to publish version $(jq .version package.json) to NPM!" >> $GITHUB_STEP_SUMMARY

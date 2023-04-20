@@ -66,3 +66,9 @@ jobs:
           npmjsPublishToken: ${{ secrets[inputs.npmjsPublishToken] }}
       - name: Untag
         run: yarn run npm:tag:remove ${{ steps.feature.outputs.stage }}
+      - name: Summary (success)
+        if: success()
+        run: echo "### Removed tag ${{ steps.feature.outputs.stage }} from NPM" >> $GITHUB_STEP_SUMMARY
+      - name: Summary (failure)
+        if: failure()
+        run: echo "### Failed to remove tag ${{ steps.feature.outputs.stage }} from NPM" >> $GITHUB_STEP_SUMMARY
