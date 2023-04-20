@@ -2,11 +2,6 @@ name: Package Publish
 on:
   workflow_call:
     inputs:
-      workspace:
-        description: "workspace to run in"
-        required: false
-        type: string
-        default: ""
       nodeVersion:
         description: "Version of Node to use"
         required: false
@@ -56,14 +51,8 @@ jobs:
         with:
           npmjsPublishToken: ${{ secrets[inputs.npmjsPublishToken] }}
       - name: Build
-        if: inputs.packageManager == 'yarn3'
-        run: yarn run build
+        run: yarn build
       - name: Publish
-        if: inputs.packageManager == 'yarn3'
-        run: yarn run publish
-      - name: Build
-        if: inputs.packageManager == 'yarn'
-        run: yarn run build
-      - name: Publish
-        if: inputs.packageManager == 'yarn'
-        run: yarn run publish
+        run: yarn npm publish
+      - name: Summary
+        run: echo "### Published version $(jq .version package.json) to NPM" >> $GITHUB_STEP_SUMMARY

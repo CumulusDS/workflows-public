@@ -2,10 +2,21 @@ name: Prerelease delete
 on:
   workflow_call:
     inputs:
+      nodeVersion:
+        description: "Version of Node to use"
+        required: false
+        type: string
+        default: "14"
       fetchDepth:
         description: "Checkout fetch depth"
         required: false
         type: string
+        default: "0"
+      ref:
+        description: "Ref to checkout.  Should be blank in most cases to let the system determine"
+        required: false
+        type: string
+        default: ""
       githubEventName:
         required: false
         type: string
@@ -26,10 +37,14 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Setup
+        uses: CumulusDS/workflow-setup-action@v2
         with:
+          nodeVersion: ${{ inputs.nodeVersion }}
+          npmToken: ${{ secrets[inputs.npmjsToken] }}
+          ref: ${{ inputs.ref }}
           fetch-depth: ${{ inputs.fetchDepth }}
+          packageManager: ${{ inputs.packageManager }}
       - name: Set feature stage
         id: feature
         uses: CumulusDS/feature-stage-action@v2
