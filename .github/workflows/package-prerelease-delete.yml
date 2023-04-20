@@ -31,6 +31,11 @@ on:
         required: false
         type: string
         default: "${{ github.event.action }}"
+      npmjsToken:
+        description: "NPMJS auth token"
+        required: false
+        type: string
+        default: "NPM_TOKEN_READ_ONLY"
       npmjsPublishToken:
         description: "NPMJS token with publishing permissions"
         required: false
