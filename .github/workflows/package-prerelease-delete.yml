@@ -26,11 +26,10 @@ on:
         required: false
         type: string
         default: "${{ github.event_name }}"
-      githubEventAction:
-        description: 'Github event action'
+      githubEventRef:
         required: false
         type: string
-        default: "${{ github.event.action }}"
+        default: "${{ github.event.ref }}"
       npmjsToken:
         description: "NPMJS auth token"
         required: false
