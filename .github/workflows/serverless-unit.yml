@@ -27,6 +27,11 @@ on:
         required: false
         type: string
         default: "NPM_TOKEN_READ_ONLY"
+      nodeOptions:
+        description: "Node options"
+        required: false
+        type: string
+        default: ""
 jobs:
   unit:
     name: Unit
@@ -43,5 +48,7 @@ jobs:
           packageManager: ${{ inputs.packageManager }}
       - name: Yarn Test
         uses: CumulusDS/yarn-test-action@v1
+        with:
+          args: ${{ inputs.nodeOptions }}
       - name: Upload
         uses: CumulusDS/unit-end-action@v1

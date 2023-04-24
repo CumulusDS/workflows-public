@@ -27,6 +27,11 @@ on:
         required: false
         type: string
         default: "NPM_TOKEN_READ_ONLY"
+      nodeOptions:
+        description: "Node options"
+        required: false
+        type: string
+        default: ""
 jobs:
   unit:
     name: Unit
@@ -72,6 +77,8 @@ jobs:
         id: yarn-test
         if: inputs.workspace == 'false'
         uses: CumulusDS/yarn-test-action@v1
+        with:
+          args: ${{ inputs.nodeOptions }}
       - name: Upload artifact
         if: always()
         uses: CumulusDS/unit-end-action@v1
