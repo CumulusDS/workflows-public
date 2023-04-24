@@ -50,11 +50,9 @@ jobs:
         uses: CumulusDS/workflows/.github/actions/set-publish-token@master
         with:
           npmjsPublishToken: ${{ secrets[inputs.npmjsPublishToken] }}
-      - name: Build
-        run: yarn build
       - name: Publish
         run: yarn npm publish
-      - name: Summary (succesS)
+      - name: Summary (success)
         if: success()
         run: echo "### Published version $(jq .version package.json) to NPM" >> $GITHUB_STEP_SUMMARY
       - name: Summary (failure)
