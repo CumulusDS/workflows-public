@@ -4,8 +4,9 @@ on:
     inputs:
       file:
         description: "file to lint"
-        required: true
+        required: false
         type: string
+        default: "serverless.yml"
       config:
         required: false
         type: string
