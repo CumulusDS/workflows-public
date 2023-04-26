@@ -53,7 +53,7 @@ on:
         description: "Is the role-name hyphenated?"
         required: false
         type: string
-        default: "false"
+        default: "true"
       accountIdSecret:
         description: "AccountID secret for reference"
         required: false
