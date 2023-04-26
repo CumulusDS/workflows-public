@@ -51,4 +51,4 @@ jobs:
         with:
           args: ${{ inputs.nodeOptions }}
       - name: Upload
-        uses: CumulusDS/unit-end-action@v1
+        uses: CumulusDS/unit-end-action@v2
