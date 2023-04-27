@@ -67,7 +67,7 @@ on:
         description: "Is the role-name hyphenated?"
         required: false
         type: string
-        default: "false"
+        default: "true"
       region:
         description: "Region to assume role in"
         required: false

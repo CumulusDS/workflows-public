@@ -53,7 +53,7 @@ on:
         description: "Is the role-name hyphenated?"
         required: false
         type: string
-        default: "false"
+        default: "true"
       durationSeconds:
         description: "Duration in seconds to assume role for"
         required: false
