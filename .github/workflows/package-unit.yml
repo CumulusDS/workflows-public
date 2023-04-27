@@ -70,12 +70,12 @@ jobs:
       # test
       - name: Yarn workspaces test
         id: yarn-workspaces-test
-        if: inputs.workspaces == 'true'
+        if: inputs.workspacess == 'true'
         run:  yarn workspace foreach run test
         shell: bash
       - name: Yarn test
         id: yarn-test
-        if: inputs.workspace == 'false'
+        if: inputs.workspaces != 'true'
         uses: CumulusDS/yarn-test-action@v1
         with:
           args: ${{ inputs.nodeOptions }}
