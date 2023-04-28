@@ -74,6 +74,11 @@ on:
         required: false
         type: string
         default: "AWS_SECRET_ACCESS_KEY"
+      globalTableName:
+        description: "Global table to enable PITR recovery on"
+        required: false
+        type: string
+        default: ""
 jobs:
   matrix:
     name: Build Matrix
@@ -138,6 +143,22 @@ jobs:
           duration_seconds: ${{ inputs.durationSeconds }}
           aws_access_key_id: ${{ secrets[inputs.awsAccessKeyId] }}
           aws_secret_access_key: ${{ secrets[inputs.awsSecretAccessKey] }}
+      - name: Remove global tables (conditional)
+        # delete the us-east-2 replica from us-east-1 matrix job first to enable deletion of the us-east-1 stack.
+        if: | # us-east-2 stack doesn't care about the table since it isn't a part of the stack in us-east-2
+         matrix.region == 'us-east-1' && inputs.globalTableName != ''
+        env:
+          SERVICE: ${{ steps.role.outputs.service }}
+          STAGE: ${{ matrix.stage }}
+          TABLE: ${{ inputs.globalTableName }}
+        run: |
+          aws dynamodb delete-table --region us-east-2 --table-name \
+            $SERVICE-$STAGE-$TABLE
+          echo "Waiting until table doesn't exist"
+          aws dynamodb wait table-not-exists --region us-east-2 --table-name \
+            $SERVICE-$STAGE-$TABLE
+          sleep 60 # wait for last writes to us-east-1 table
+        continue-on-error: true
       - name: serverless remove
         uses: CumulusDS/sls-deploy-remove-action@v1
         with:

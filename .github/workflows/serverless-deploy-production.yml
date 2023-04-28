@@ -90,6 +90,11 @@ on:
         required: false
         type: string
         default: "PRIOR_VERSION_TOKEN"
+      globalTableName:
+        description: "Global table to enable PITR recovery on"
+        required: false
+        type: string
+        default: ""
 jobs:
   preNotifier:
     name: Release Begin Notifier
@@ -121,6 +126,7 @@ jobs:
       awsSecretAccessKey: ${{ inputs.awsSecretAccessKey }}
       stackPolicyFile: ${{ inputs.stackPolicyFile }}
       runsOnLabel: ${{ inputs.runsOnLabel }}
+      globalTableName: ${{ inputs.globalTableName }}
   notify:
     name: Release Notifier
     runs-on: ubuntu-22.04

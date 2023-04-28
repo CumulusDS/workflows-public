@@ -80,6 +80,11 @@ on:
         required: false
         type: string
         default: "ubuntu-latest-4-cores"
+      globalTableName:
+        description: "Global table to enable PITR recovery on"
+        required: false
+        type: string
+        default: ""
     outputs:
       matrixStages:
         description: "Stage used in output matrix"
@@ -160,9 +165,45 @@ jobs:
           duration_seconds: ${{ inputs.durationSeconds }}
           aws_access_key_id: ${{ secrets[inputs.awsAccessKeyId] }}
           aws_secret_access_key: ${{ secrets[inputs.awsSecretAccessKey] }}
+      - name: Debug
+        run: |
+          echo "matrix.region: ${{ matrix.region }}"
+          echo "inputs.globalTableName: ${{ inputs.globalTableName }}"
+      - name: Global Table Wait (conditional)
+        if: | # Only needed from us-east-1 region as primary table is created here
+          matrix.region == 'us-east-1' && inputs.globalTableName != ''
+        run: | # https://github.com/tveal/serverless-dynamodb-global-table-v2-plugin#advanced
+          export GTV2_RETRY=30
+          export GTV2_RETRY_PAUSE_MILLIS=20000
       - name: serverless deploy
         uses: CumulusDS/sls-deploy-remove-action@v1
         with:
           service: ${{ steps.role.outputs.service }}
           stack_policy_file: ${{ inputs.stackPolicyFile }}
+          verbose: true
           args: --config ${{ inputs.config }}
+      - name: Enable Global Table PITR (conditional)
+        if: | # enable from us-east-1 region only after replicas are created
+          matrix.region == 'us-east-1' && inputs.globalTableName != ''
+        env:
+          SERVICE: ${{ steps.role.outputs.service }}
+          STAGE: ${{ matrix.stage }}
+          TABLE: ${{ inputs.globalTableName }}
+        run: |
+          aws dynamodb wait table-exists --region us-east-2 --table-name \
+            $SERVICE-$STAGE-$TABLE
+          aws dynamodb update-continuous-backups --region us-east-2 --table-name \
+            $SERVICE-$STAGE-$TABLE \
+            --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true
+          if [[ "$STAGE" == "prod" ]]; then
+            aws dynamodb wait table-exists --region ap-southeast-1 --table-name \
+              $SERVICE-$STAGE}-$TABLE
+            aws dynamodb update-continuous-backups --region ap-southeast-1 --table-name \
+              $SERVICE-$STAGE-$TABLE \
+              --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true
+            aws dynamodb wait table-exists --region eu-west-1 --table-name \
+              $SERVICE-$STAGE-$TABLE
+            aws dynamodb update-continuous-backups --region eu-west-1 --table-name \
+              $SERVICE-$STAGE-$TABLE \
+              --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true
+          fi
