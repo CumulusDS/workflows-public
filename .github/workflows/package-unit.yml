@@ -54,23 +54,22 @@ jobs:
       - name: Workspace Build
         id: workspace-build
         if: inputs.workspaces == 'true'
-        run: yarn workspace @${{ inputs.workspace }} build
+        run: yarn workspace foreach build
         shell: bash
       - name: Build
         id: build
-        #if: inputs.workspaces == ''
+        if: inputs.workspaces != 'true'
         run: yarn build
         shell: bash
       # CumulusDS/yarn-test-action
       - name: Check Licenses
         id: check-licenses
-        #if: inputs.workspaces != ''
         run: yarn build:license-checker
         shell: bash
       # test
       - name: Yarn workspaces test
         id: yarn-workspaces-test
-        if: inputs.workspacess == 'true'
+        if: inputs.workspaces == 'true'
         run:  yarn workspace foreach run test
         shell: bash
       - name: Yarn test

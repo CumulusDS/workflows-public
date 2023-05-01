@@ -169,6 +169,15 @@ jobs:
         run: |
           echo "matrix.region: ${{ matrix.region }}"
           echo "inputs.globalTableName: ${{ inputs.globalTableName }}"
+      - name: Build (if package.json key exists)
+        run: |
+          if [[ $(cat package.json | jq '.scripts.build') == null ]]; then 
+            echo "yarn build is not required"
+          else
+            yarn build
+          fi
+      - name: set git user
+        run: git config --local user.name ${GITHUB_ACTOR}
       - name: Global Table Wait (conditional)
         if: | # Only needed from us-east-1 region as primary table is created here
           matrix.region == 'us-east-1' && inputs.globalTableName != ''

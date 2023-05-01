@@ -79,6 +79,11 @@ on:
         required: false
         type: string
         default: ""
+      workDir:
+        description: "Working directory path to run commands from.  Appends $GITHUB_WORKSPACE"
+        required: false
+        type: string
+        default: ""
 jobs:
   matrix:
     name: Build Matrix
@@ -167,4 +172,5 @@ jobs:
           action: remove
           verbose: true
           debug: false
+          workDir: ${{ inputs.workDir }}
           args: --config ${{ inputs.config }}
