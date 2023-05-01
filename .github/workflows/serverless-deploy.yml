@@ -181,8 +181,19 @@ jobs:
           else
             yarn build
           fi
-      - name: set git user
-        run: git config --local user.name ${GITHUB_ACTOR}
+      - name: workdir vs config
+        id: workdir-vs-config
+        if: ${{ startsWith(inputs.config, inputs.workDir) }}
+        run: |
+          echo "inputs.config starts with inputs.workDir!"
+          echo "args=${CONFIG#${WORKDIR}/}" >> $GITHUB_OUTPUT
+        env:
+          WORKDIR: ${{ inputs.workDir }}
+          CONFIG: ${{ inputs.config }}
+      - name: args
+        id: args
+        if: ${{ !startsWith(inputs.config, inputs.workDir) }}
+        run: echo "args=--config ${{ inputs.config }}" >> "$GITHUB_OUTPUT"
       - name: Global Table Wait (conditional)
         if: | # Only needed from us-east-1 region as primary table is created here
           matrix.region == 'us-east-1' && inputs.globalTableName != ''
@@ -195,7 +206,8 @@ jobs:
           service: ${{ steps.role.outputs.service }}
           stack_policy_file: ${{ inputs.stackPolicyFile }}
           verbose: true
-          args: --config ${{ inputs.config }}
+          #args: --config ${{ inputs.config }}
+          args: ${{ steps.workdir-vs-config.outputs.args || steps.args.outputs.args }}
           workDir: ${{ inputs.workDir }}
       - name: Enable Global Table PITR (conditional)
         if: | # enable from us-east-1 region only after replicas are created
