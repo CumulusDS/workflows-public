@@ -54,7 +54,7 @@ jobs:
       - name: Workspace Build
         id: workspace-build
         if: inputs.workspaces == 'true'
-        run: yarn workspaces foreach build
+        run: yarn workspaces foreach run build
         shell: bash
       - name: Build
         id: build

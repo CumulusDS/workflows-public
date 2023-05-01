@@ -206,7 +206,6 @@ jobs:
           service: ${{ steps.role.outputs.service }}
           stack_policy_file: ${{ inputs.stackPolicyFile }}
           verbose: true
-          #args: --config ${{ inputs.config }}
           args: ${{ steps.workdir-vs-config.outputs.args || steps.args.outputs.args }}
           workDir: ${{ inputs.workDir }}
       - name: Enable Global Table PITR (conditional)
