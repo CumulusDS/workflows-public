@@ -85,6 +85,11 @@ on:
         required: false
         type: string
         default: ""
+      workDir:
+        description: "Working directory path to run commands from.  Appends $GITHUB_WORKSPACE"
+        required: false
+        type: string
+        default: ""
     outputs:
       matrixStages:
         description: "Stage used in output matrix"
@@ -191,6 +196,7 @@ jobs:
           stack_policy_file: ${{ inputs.stackPolicyFile }}
           verbose: true
           args: --config ${{ inputs.config }}
+          workDir: ${{ inputs.workDir }}
       - name: Enable Global Table PITR (conditional)
         if: | # enable from us-east-1 region only after replicas are created
           matrix.region == 'us-east-1' && inputs.globalTableName != ''
