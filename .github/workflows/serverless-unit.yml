@@ -51,6 +51,13 @@ jobs:
           ref: ${{ inputs.ref }}
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}
+      - name: Build (if package.json key exists)
+        run: |
+          if [[ $(cat package.json | jq '.scripts.build') == null ]]; then 
+            echo "yarn build is not required"
+          else
+            yarn build
+          fi
       - name: Yarn Test
         uses: CumulusDS/yarn-test-action@v1
         with:
