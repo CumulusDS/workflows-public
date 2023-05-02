@@ -55,7 +55,7 @@ on:
 jobs:
   unit:
     name: Unit
-    runs-on: ubuntu-22.04
+    runs-on: linux
     strategy:
       fail-fast: ${{ fromJSON(inputs.failFast) }}
       matrix:
