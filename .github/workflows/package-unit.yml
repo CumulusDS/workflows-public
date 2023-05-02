@@ -65,31 +65,8 @@ jobs:
           ref: ${{ inputs.ref }}
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}
-      # build
-#      - name: Workspace Build
-#        id: workspace-build
-#        if: inputs.workspaces == 'true'
-#        run: yarn workspaces foreach run build
-#        shell: bash
-      - name: Build
-        id: build
-        if: inputs.workspaces != 'true'
-        run: yarn build
-        shell: bash
-      # CumulusDS/yarn-test-action
-#      - name: Check Licenses
-#        id: check-licenses
-#        run: yarn build:license-checker
-#        shell: bash
-      # test
-#      - name: Yarn workspaces test
-#        id: yarn-workspaces-test
-#        if: inputs.workspaces == 'true'
-#        run:  yarn workspaces foreach run test
-#        shell: bash
       - name: Yarn test
         id: yarn-test
-        #if: inputs.workspaces != 'true'
         uses: CumulusDS/yarn-test-action@v1
         with:
           args: ${{ inputs.nodeOptions }}
