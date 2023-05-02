@@ -95,7 +95,7 @@ jobs:
       # test
       - name: Yarn test
         id: yarn-test
-        uses: CumulusDS/yarn-test-action@v1
+        uses: CumulusDS/yarn-test-action@master
         with:
           args: ${{ inputs.nodeOptions }}
           workspace: ${{ inputs.workspace }}
