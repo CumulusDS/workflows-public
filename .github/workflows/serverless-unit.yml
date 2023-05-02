@@ -59,7 +59,7 @@ jobs:
             yarn build
           fi
       - name: Yarn Test
-        uses: CumulusDS/yarn-test-action@v1
+        uses: CumulusDS/yarn-test-action@master
         with:
           args: ${{ inputs.nodeOptions }}
           workspace: ${{ inputs.workspace }}
