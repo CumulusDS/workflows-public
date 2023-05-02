@@ -70,11 +70,29 @@ jobs:
           ref: ${{ inputs.ref }}
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}
+      # build packages
       - name: Build
         id: build
         if: inputs.workspaces != 'true' && inputs.workspace == '' # yarn test action will handle specific or multiple workspaces
         run: yarn build
         shell: bash
+      - name: Build workspace ${{ inputs.workspace }}
+        id: workspace-build
+        if: inputs.workspaces != 'true' && inputs.workspace != ''
+        run: |
+          echo "::group::yarn build single workspace"
+          yarn workspace ${{ inputs.workspace }} build
+          echo "::endgroup::"
+        shell: bash
+      - name: Build all workspaces
+        id: workspaces-build
+        if: inputs.workspaces == 'true' && inputs.workspace != ''
+        run: |
+          echo "::group::yarn build all workspaces"
+          yarn workspaces foreach run build
+          echo "::endgroup::"
+        shell: bash
+      # test
       - name: Yarn test
         id: yarn-test
         uses: CumulusDS/yarn-test-action@v1
