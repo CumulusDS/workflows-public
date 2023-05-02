@@ -32,6 +32,11 @@ on:
         required: false
         type: string
         default: "NPM_TOKEN_PUBLISH"
+      workspaces:
+        description: "are workspaces enabled"
+        required: false
+        type: string
+        default: "false"
 jobs:
   publish:
     name: Publish
@@ -51,7 +56,11 @@ jobs:
         with:
           npmjsPublishToken: ${{ secrets[inputs.npmjsPublishToken] }}
       - name: Publish
+        if: inputs.workspaces != 'true'
         run: yarn npm publish
+      - name: Publish (workspaces)
+        if: inputs.workspaces == 'true'
+        run: yarn publish
       - name: Summary (success)
         if: success()
         run: echo "### Published version $(jq .version package.json) to NPM" >> $GITHUB_STEP_SUMMARY
