@@ -93,14 +93,16 @@ jobs:
         run: |
           pjs=($(find . -type f -name package.json -not -path "./node_modules/*"))
           for version in "${pjs[@]}"; do
-            ### Published $(jq '.name' ${version}) version $(jq '.version' ${version}) to NPM" >> "$GITHUB_STEP_SUMMARY"
+            echo "### Published $(jq '.name' ${version}) version $(jq '.version' ${version}) to NPM" >> "$GITHUB_STEP_SUMMARY"
           done
       - name: Summary ${{ inputs.workspace }}
         if: inputs.workspaces != 'true' || inputs.workspace != ''
         run: |
           pjs=($(find . -type f -name package.json -not -path "./node_modules/*"))
+          echo "package.json files found: ${pgs[@]}"
+          
           for version in "${pjs[@]}"; do
             if [[ "$(jq -r '.name' ${version})" == "${{ inputs.workspace }}" ]]; then 
-              ### Published $(jq '.name' ${version}) version $(jq '.version' ${version}) to NPM" >> "$GITHUB_STEP_SUMMARY"
+              echo "### Published $(jq '.name' ${version}) version $(jq '.version' ${version}) to NPM" >> "$GITHUB_STEP_SUMMARY"
             fi
           done

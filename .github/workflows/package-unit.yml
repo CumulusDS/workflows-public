@@ -3,10 +3,15 @@ on:
   workflow_call:
     inputs:
       workspaces:
-        description: "are workspaces enabled"
+        description: "are workspaces enabled?  should this run for all workspaces?"
         required: false
         type: string
         default: "false"
+      workspace:
+        description: "specific workspoace to run against"
+        required: false
+        type: string
+        default: ""
       ref:
         description: "Ref to checkout.  Should be blank in most cases to let the system determine"
         required: false
@@ -65,11 +70,17 @@ jobs:
           ref: ${{ inputs.ref }}
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}
+      - name: Build
+        id: build
+        if: inputs.workspaces != 'true' && inputs.workspace == '' # yarn test action will handle specific or multiple workspaces
+        run: yarn build
+        shell: bash
       - name: Yarn test
         id: yarn-test
         uses: CumulusDS/yarn-test-action@v1
         with:
           args: ${{ inputs.nodeOptions }}
+          workspace: ${{ inputs.workspace }}
           workspaces: ${{ inputs.workspaces }}
       - name: Upload artifact
         if: always()
