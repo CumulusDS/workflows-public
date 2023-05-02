@@ -102,4 +102,4 @@ jobs:
           workspaces: ${{ inputs.workspaces }}
       - name: Upload artifact
         if: always()
-        uses: CumulusDS/unit-end-action@v1
+        uses: CumulusDS/unit-end-action@v2
