@@ -32,6 +32,16 @@ on:
         required: false
         type: string
         default: ""
+      nodeVersions:
+        description: "Array list of node versions to run tests against.  Default '[14, 16, 18, 19]'"
+        required: false
+        type: string
+        default: "[14, 16, 18, 19]"
+      timeoutMinutes:
+        description: "job timeout time, in minutes"
+        required: false
+        type: string
+        default: "10"
 jobs:
   unit:
     name: Unit
@@ -39,8 +49,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [14, 16, 18, 19]
-    timeout-minutes: 10
+        node: ${{ fromJSON(inputs.nodeVersions) }}
+    timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}
     steps:
       - name: Setup
         uses: CumulusDS/workflow-setup-action@v2
