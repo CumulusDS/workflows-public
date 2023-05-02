@@ -52,7 +52,7 @@ jobs:
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}
       - name: Yarn Test
-        uses: CumulusDS/yarn-test-action@workspace
+        uses: CumulusDS/yarn-test-action@v1
         with:
           args: ${{ inputs.nodeOptions }}
           workspace: ${{ inputs.workspace }}
