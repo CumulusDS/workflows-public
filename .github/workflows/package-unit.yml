@@ -42,12 +42,17 @@ on:
         required: false
         type: string
         default: "10"
+      failFast:
+        description: "fail fast option for matrix"
+        required: false
+        type: string
+        default: "true"
 jobs:
   unit:
     name: Unit
     runs-on: ubuntu-22.04
     strategy:
-      fail-fast: false
+      fail-fast: ${{ fromJSON(inputs.failFast) }}
       matrix:
         node: ${{ fromJSON(inputs.nodeVersions) }}
     timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}

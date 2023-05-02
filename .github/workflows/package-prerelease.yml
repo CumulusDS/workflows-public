@@ -32,10 +32,15 @@ on:
         type: string
         default: "16"
       workspaces:
-        description: "are workspaces enabled"
+        description: "are workspaces enabled?  should this run for all workspaces?"
         required: false
         type: string
         default: "false"
+      workspace:
+        description: "specific workspoace to run against"
+        required: false
+        type: string
+        default: ""
 jobs:
   prerelease:
     name: Publish Prerelease
@@ -59,13 +64,26 @@ jobs:
         with:
           packageManager: ${{ inputs.packageManager }}
           npmjsPublishToken: ${{ secrets[inputs.npmjsPublishToken] }}
-      - name: Set prerelease version
+      # set prerelease version
+      - name: Set prerelease version (hybrid)
+        if: inputs.workspaces != 'true' && inputs.workspace == ''
         run: yarn run prerelease ${{ steps.feature.outputs.stage }}
-      - name: Publish
-        if: inputs.workspaces != 'true'
+      - name: Set prerelease version (all workspaces)
+        if: inputs.workspaces == 'true' && inputs.workspace == ''
+        run: yarn workspaces foreach run prerelease ${{ steps.feature.outputs.stage }}
+      - name: Set prerelease version ${{ inputs.workspace }}
+        if: inputs.workspaces != 'true' && inputs.workspace != ''
+        run: yarn workspaces foreach --include ${{ inputs.workspace }} run prerelease ${{ steps.feature.outputs.stage }}
+      # publish
+      - name: Publish (hybrid)
+        if: inputs.workspaces != 'true' && inputs.workspace == ''
         run: yarn npm publish --tag ${{ steps.feature.outputs.stage }}
-      - name: Publish
-        if: inputs.workspaces == 'true'
-        run: yarn publish --tag ${{ steps.feature.outputs.stage }}
+      - name: Publish (all workspaces)
+        if: inputs.workspaces == 'true' && inputs.workspace == ''
+        run: yarn run publish:prerelease --tag ${{ steps.feature.outputs.stage }}
+      - name: Publish ${{ inputs.workspace }}
+        if: inputs.workspaces != 'true' && inputs.workspace != ''
+        run: yarn workspaces foreach --include ${{ inputs.workspace }} run publish --tag ${{ steps.feature.outputs.stage }}
+      # $GITHUB_STEP_SUMMARY
       - name: Summary
-        run: echo "### Published version $(jq .version package.json) to NPM" >> $GITHUB_STEP_SUMMARY
+        run: echo "### Published version $(jq .version package.json) to NPM" >> "$GITHUB_STEP_SUMMARY"
