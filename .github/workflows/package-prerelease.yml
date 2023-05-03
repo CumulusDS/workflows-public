@@ -89,7 +89,7 @@ jobs:
         if: inputs.workspaces != 'true' && inputs.workspace == ''
         run: echo "### Published $(jq '.name' package.json) version $(jq .version package.json) to NPM" >> "$GITHUB_STEP_SUMMARY"
       - name: Summary (all workspaces)
-        if: inputs.workspaces == 'true' || inputs.workspace == ''
+        if: inputs.workspaces == 'true' || inputs.workspace != ''
         run: |
           pjs=($(find . -type f -name package.json -not -path "./node_modules/*"))
           for version in "${pjs[@]}"; do
