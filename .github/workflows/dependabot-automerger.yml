@@ -1,7 +1,19 @@
 name: Dependabot AutoMerger
-on: [workflow_call]
+on:
+  workflow_call:
+    inputs:
+      mergeTries:
+        description: "how many times to attempt merging"
+        required: false
+        type: string
+        default: "10"
+      mergeRetrySleep:
+        description: "how long to wait between merge tries, in milliseconds"
+        required: false
+        type: string
+        default: "60000"
 jobs:
-  dependabot-automerge:
+  dependabot-auto-merge:
     name: Dependabot AutoMerger
     if: github.actor == 'dependabot[bot]'
     timeout-minutes: 20
@@ -11,18 +23,21 @@ jobs:
         uses: kibertoad/wait-action@1.0.1
         with:
           time: 30
-      - name: Automerge
-        id: automerge
+      - name: Auto Merge
+        id: auto-merge
         uses: "pascalgn/automerge-action@v0.15.6"
         env:
           GITHUB_TOKEN: "${{ secrets.RELEASE_TOKEN }}"
           MERGE_LABELS: "dependencies,!config,!actions,!bug,!cloudformation,!documentation,!duplicate,!enhancement,!good first issue,!help wanted,!invalid,!prod,!question,!wontfix,!wip,!work in progress"
           MERGE_FILTER_AUTHOR: "dependabot[bot]"
           MERGE_FORKS: "false"
-          MERGE_RETRIES: "10"
-          MERGE_RETRY_SLEEP: "60000"
+          MERGE_RETRIES: ${{ inputs.mergeTries }}
+          MERGE_RETRY_SLEEP: ${{ inputs.mergeRetrySleep }}
           UPDATE_LABELS: ""
           UPDATE_METHOD: "merge"
       - name: feedback
-        if: steps.automerge.outputs.mergeResult == 'merged'
-        run: echo "Pull request ${{ steps.automerge.outputs.pullRequestNumber }} merged!"
+        if: steps.auto-merge.outputs.mergeResult == 'merged'
+        run: echo "Pull request ${{ steps.auto-merge.outputs.pullRequestNumber }} merged!"
+      - name: summary
+        if: steps.auto-merge.outputs.mergeResult == 'merged'
+        run: echo "### Pull request ${{ steps.auto-merge.outputs.pullRequestNumber }} merged!" >> "$GITHUB_STEP_SUMMARY"
