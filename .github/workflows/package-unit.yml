@@ -86,7 +86,7 @@ jobs:
         shell: bash
       - name: Build all workspaces
         id: workspaces-build
-        if: inputs.workspaces == 'true' && inputs.workspace != ''
+        if: inputs.workspaces == 'true' && inputs.workspace == ''
         run: |
           echo "::group::yarn build all workspaces"
           yarn workspaces foreach run build

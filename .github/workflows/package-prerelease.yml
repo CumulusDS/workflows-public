@@ -80,7 +80,7 @@ jobs:
         run: yarn npm publish --tag ${{ steps.feature.outputs.stage }}
       - name: Publish (all workspaces)
         if: inputs.workspaces == 'true' && inputs.workspace == ''
-        run: yarn workspaces foreach --no-private yarn run publish --tag ${{ steps.feature.outputs.stage }}
+        run: yarn workspaces foreach --no-private npm publish --tag ${{ steps.feature.outputs.stage }}
       - name: Publish ${{ inputs.workspace }}
         if: inputs.workspaces != 'true' && inputs.workspace != ''
         run: yarn workspaces foreach --include ${{ inputs.workspace }} run publish --tag ${{ steps.feature.outputs.stage }}
@@ -89,7 +89,7 @@ jobs:
         if: inputs.workspaces != 'true' && inputs.workspace == ''
         run: echo "### Published $(jq '.name' package.json) version $(jq .version package.json) to NPM" >> "$GITHUB_STEP_SUMMARY"
       - name: Summary (all workspaces)
-        if: inputs.workspaces == 'true' && inputs.workspace != ''
+        if: inputs.workspaces == 'true' && inputs.workspace == ''
         run: |
           pjs=($(find . -type f -name package.json -not -path "./node_modules/*"))
           for version in "${pjs[@]}"; do

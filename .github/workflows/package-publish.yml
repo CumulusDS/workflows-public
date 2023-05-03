@@ -33,10 +33,15 @@ on:
         type: string
         default: "NPM_TOKEN_PUBLISH"
       workspaces:
-        description: "are workspaces enabled"
+        description: "are workspaces enabled?  should this run for all workspaces?"
         required: false
         type: string
         default: "false"
+      workspace:
+        description: "specific workspoace to run against"
+        required: false
+        type: string
+        default: ""
 jobs:
   publish:
     name: Publish
@@ -55,15 +60,57 @@ jobs:
         uses: CumulusDS/workflows/.github/actions/set-publish-token@master
         with:
           npmjsPublishToken: ${{ secrets[inputs.npmjsPublishToken] }}
-      - name: Publish
-        if: inputs.workspaces != 'true'
+      # publish
+      - name: Publish (packages/hybrid)
+        if: inputs.workspaces != 'true' && inputs.workspace == ''
         run: yarn npm publish
-      - name: Publish (workspaces)
-        if: inputs.workspaces == 'true'
-        run: yarn publish
-      - name: Summary (success)
-        if: success()
-        run: echo "### Published version $(jq .version package.json) to NPM" >> $GITHUB_STEP_SUMMARY
-      - name: Summary (failure)
-        if: failure()
-        run: echo "### Failed to publish version $(jq .version package.json) to NPM!" >> $GITHUB_STEP_SUMMARY
+      - name: Publish (all workspaces)
+        if: inputs.workspaces == 'true' && inputs.workspace == ''
+        run: yarn workspaces foreach --no-private npm publish
+      - name: Publish ${{ inputs.workspace }}
+        if: inputs.workspaces != 'true' && inputs.workspace != ''
+        run: yarn workspaces foreach --include ${{ inputs.workspace }} run publish
+      # $GITHUB_STEP_SUMMARY - success
+      - name: Summary (packages/hybrid)
+        if: success() && inputs.workspaces != 'true' && inputs.workspace == ''
+        run: echo "### Published $(jq '.name' package.json) version $(jq .version package.json) to NPM" >> "$GITHUB_STEP_SUMMARY"
+      - name: Summary (all workspaces)
+        if: success() && inputs.workspaces == 'true' && inputs.workspace == ''
+        run: |
+          pjs=($(find . -type f -name package.json -not -path "./node_modules/*"))
+          for version in "${pjs[@]}"; do
+            echo "### Published $(jq '.name' ${version}) version $(jq '.version' ${version}) to NPM" >> "$GITHUB_STEP_SUMMARY"
+          done
+      - name: Summary ${{ inputs.workspace }}
+        if: success() && inputs.workspaces != 'true' && inputs.workspace != ''
+        run: |
+          pjs=($(find . -type f -name package.json -not -path "./node_modules/*"))
+          echo "package.json files found: ${pjs[@]}"
+          
+          for version in "${pjs[@]}"; do
+            if [[ "$(jq -r '.name' ${version})" == "${{ inputs.workspace }}" ]]; then 
+              echo "### Published $(jq '.name' ${version}) version $(jq '.version' ${version}) to NPM" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+      # $GITHUB_STEP_SUMMARY - failure
+      - name: Summary (packages/hybrid)
+        if: failure() && inputs.workspaces != 'true' && inputs.workspace == ''
+        run: echo "### Failed to publish $(jq '.name' package.json) version $(jq .version package.json) to NPM" >> "$GITHUB_STEP_SUMMARY"
+      - name: Summary (all workspaces)
+        if: failure() && inputs.workspaces == 'true' && inputs.workspace != ''
+        run: |
+          pjs=($(find . -type f -name package.json -not -path "./node_modules/*"))
+          for version in "${pjs[@]}"; do
+            echo "### Failed to publish $(jq '.name' ${version}) version $(jq '.version' ${version}) to NPM" >> "$GITHUB_STEP_SUMMARY"
+          done
+      - name: Summary ${{ inputs.workspace }}
+        if: failure() && inputs.workspaces != 'true' && inputs.workspace != ''
+        run: |
+          pjs=($(find . -type f -name package.json -not -path "./node_modules/*"))
+          echo "package.json files found: ${pjs[@]}"
+          
+          for version in "${pjs[@]}"; do
+            if [[ "$(jq -r '.name' ${version})" == "${{ inputs.workspace }}" ]]; then 
+              echo "### Failed to publish $(jq '.name' ${version}) version $(jq '.version' ${version}) to NPM" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
