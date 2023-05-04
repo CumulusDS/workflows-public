@@ -94,7 +94,9 @@ jobs:
           pjs=($(find . -type f -name package.json -not -path "./node_modules/*"))
           echo "package.json files found: ${pjs[@]}"
           for version in "${pjs[@]}"; do
-            echo "### Published $(jq '.name' ${version}) version $(jq '.version' ${version}) to NPM" >> "$GITHUB_STEP_SUMMARY"
+            if [[ "$(jq -r '.private' ${version})" != "true" ]]; then
+              echo "### Published $(jq '.name' ${version}) version $(jq '.version' ${version}) to NPM" >> "$GITHUB_STEP_SUMMARY"
+            fi
           done
       - name: Summary ${{ inputs.workspace }}
         if: inputs.workspaces != 'true' && inputs.workspace != ''

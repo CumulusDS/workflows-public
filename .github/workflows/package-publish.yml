@@ -79,7 +79,9 @@ jobs:
         run: |
           pjs=($(find . -type f -name package.json -not -path "./node_modules/*"))
           for version in "${pjs[@]}"; do
-            echo "### Published $(jq '.name' ${version}) version $(jq '.version' ${version}) to NPM" >> "$GITHUB_STEP_SUMMARY"
+            if [[ "$(jq -r '.private' ${version})" != "true" ]]; then
+              echo "### Published $(jq '.name' ${version}) version $(jq '.version' ${version}) to NPM" >> "$GITHUB_STEP_SUMMARY"
+            fi
           done
       - name: Summary ${{ inputs.workspace }}
         if: success() && inputs.workspaces != 'true' && inputs.workspace != ''
@@ -101,7 +103,9 @@ jobs:
         run: |
           pjs=($(find . -type f -name package.json -not -path "./node_modules/*"))
           for version in "${pjs[@]}"; do
-            echo "### Failed to publish $(jq '.name' ${version}) version $(jq '.version' ${version}) to NPM" >> "$GITHUB_STEP_SUMMARY"
+            if [[ "$(jq -r '.private' ${version})" != "true" ]]; then
+              echo "### Failed to publish $(jq '.name' ${version}) version $(jq '.version' ${version}) to NPM" >> "$GITHUB_STEP_SUMMARY"
+            fi
           done
       - name: Summary ${{ inputs.workspace }}
         if: failure() && inputs.workspaces != 'true' && inputs.workspace != ''
