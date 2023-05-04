@@ -97,9 +97,10 @@ jobs:
         id: yarn-test
         uses: CumulusDS/yarn-test-action@master
         with:
-          args: ${{ inputs.nodeOptions }}
           workspace: ${{ inputs.workspace }}
           workspaces: ${{ inputs.workspaces }}
+        env:
+          NODE_OPTIONS: ${{ inputs.nodeOptions }}
       - name: Upload artifact
         if: always()
         uses: CumulusDS/unit-end-action@v2
