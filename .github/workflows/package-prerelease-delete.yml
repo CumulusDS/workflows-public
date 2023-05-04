@@ -68,7 +68,23 @@ jobs:
         run: yarn run npm:tag:remove ${{ steps.feature.outputs.stage }}
       - name: Summary (success)
         if: success()
-        run: echo "### Removed tag ${{ steps.feature.outputs.stage }} from NPM" >> $GITHUB_STEP_SUMMARY
+        env:
+          TAG: ${{ steps.feature.outputs.stage }}
+        run: |
+          pjs=($(find . -type f -name package.json -not -path "./node_modules/*"))
+          for version in "${pjs[@]}"; do
+            if [[ "$(jq -r '.private' ${version})" != "true" ]]; then
+              echo "### Removed tag $(jq '.name' ${version}) version $TAG from NPM" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
       - name: Summary (failure)
         if: failure()
-        run: echo "### Failed to remove tag ${{ steps.feature.outputs.stage }} from NPM" >> $GITHUB_STEP_SUMMARY
+        env:
+          TAG: ${{ steps.feature.outputs.stage }}
+        run: |
+          pjs=($(find . -type f -name package.json -not -path "./node_modules/*"))
+          for version in "${pjs[@]}"; do
+            if [[ "$(jq -r '.private' ${version})" != "true" ]]; then
+              echo "### Failed to remove tag $(jq '.name' ${version}) version $TAG from NPM" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
