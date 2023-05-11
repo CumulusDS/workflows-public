@@ -51,7 +51,7 @@ jobs:
   unit:
     name: Unit
     runs-on: ${{ inputs.runsOnLabel }}
-    timeout-minutes: ${{ inputs.timeoutMinutes }}
+    timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}
     steps:
       - name: Setup
         uses: CumulusDS/workflow-setup-action@v2

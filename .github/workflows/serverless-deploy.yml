@@ -140,7 +140,7 @@ jobs:
   deploy:
     name: Deploy ${{ matrix.stage }} (${{ matrix.region }})
     runs-on: ${{ inputs.runsOnLabel }}
-    timeout-minutes: ${{ inputs.timeoutMinutes }}
+    timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}
     needs: matrix
     strategy:
       matrix:
