@@ -79,7 +79,7 @@ on:
         description: "Runner label"
         required: false
         type: string
-        default: "ubuntu-latest-4-cores"
+        default: "ubuntu-22.04"
       globalTableName:
         description: "Global table to enable PITR recovery on"
         required: false
@@ -90,6 +90,11 @@ on:
         required: false
         type: string
         default: ""
+      timeoutMinutes:
+        description: "Timeout in minutes"
+        required: false
+        type: string
+        default: "30"
     outputs:
       matrixStages:
         description: "Stage used in output matrix"
@@ -135,7 +140,7 @@ jobs:
   deploy:
     name: Deploy ${{ matrix.stage }} (${{ matrix.region }})
     runs-on: ${{ inputs.runsOnLabel }}
-    timeout-minutes: 20
+    timeout-minutes: ${{ inputs.timeoutMinutes }}
     needs: matrix
     strategy:
       matrix:

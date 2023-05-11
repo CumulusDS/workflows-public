@@ -37,11 +37,21 @@ on:
         required: false
         type: string
         default: ""
+      runsOn:
+        description: "Runner to use"
+        required: false
+        type: string
+        default: "ubuntu-22.04"
+      timeoutMinutes:
+        description: "Timeout in minutes"
+        required: false
+        type: string
+        default: "20"
 jobs:
   unit:
     name: Unit
-    runs-on: ubuntu-22.04
-    timeout-minutes: 20
+    runs-on: ${{ inputs.runsOnLabel }}
+    timeout-minutes: ${{ inputs.timeoutMinutes }}
     steps:
       - name: Setup
         uses: CumulusDS/workflow-setup-action@v2

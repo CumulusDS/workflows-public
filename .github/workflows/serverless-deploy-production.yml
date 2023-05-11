@@ -95,6 +95,11 @@ on:
         required: false
         type: string
         default: ""
+      timeoutMinutes:
+        description: "Timeout in minutes"
+        required: false
+        type: string
+        default: "20"
 jobs:
   preNotifier:
     name: Release Begin Notifier
@@ -127,6 +132,7 @@ jobs:
       stackPolicyFile: ${{ inputs.stackPolicyFile }}
       runsOnLabel: ${{ inputs.runsOnLabel }}
       globalTableName: ${{ inputs.globalTableName }}
+      timeoutMinutes: ${{ inputs.timeoutMinutes }}
   notify:
     name: Release Notifier
     runs-on: ubuntu-22.04
