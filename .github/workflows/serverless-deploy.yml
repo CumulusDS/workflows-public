@@ -75,11 +75,6 @@ on:
         required: false
         type: string
         default: "templates/policies/serverless.json"
-      runsOnLabel:
-        description: "Runner label"
-        required: false
-        type: string
-        default: "ubuntu-22.04"
       globalTableName:
         description: "Global table to enable PITR recovery on"
         required: false
@@ -90,11 +85,16 @@ on:
         required: false
         type: string
         default: ""
+      runsOn:
+        description: "Runner to use.  Default is ubuntu-22.04"
+        required: false
+        type: string
+        default: "[ubuntu-22.04]"
       timeoutMinutes:
         description: "Timeout in minutes"
         required: false
         type: string
-        default: "30"
+        default: "20"
     outputs:
       matrixStages:
         description: "Stage used in output matrix"
@@ -139,7 +139,7 @@ jobs:
           loneRegion: ${{ inputs.loneRegion }}
   deploy:
     name: Deploy ${{ matrix.stage }} (${{ matrix.region }})
-    runs-on: "ubuntu-22.04" # ${{ fromJSON(inputs.runsOnLabel) }}
+    runs-on: "ubuntu-22.04" # ${{ fromJSON(inputs.runsOn) }}
     timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}
     needs: matrix
     strategy:
