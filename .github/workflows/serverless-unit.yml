@@ -50,7 +50,7 @@ on:
 jobs:
   unit:
     name: Unit
-    runs-on: ${{ fromJSON(inputs.runsOn) }}
+    runs-on: "ubuntu-22.04" # ${{ fromJSON(inputs.runsOn) }}
     timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}
     steps:
       - name: Setup
