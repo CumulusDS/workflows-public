@@ -50,7 +50,8 @@ on:
 jobs:
   unit:
     name: Unit
-    runs-on: ${{ fromJSON(inputs.runsOn) }}
+    # runs-on: ${{ fromJSON(inputs.runsOn) }} # Error when evaluating 'runs-on' for job 'unit'. CumulusDS/workflows/.github/workflows/serverless-unit.yml@runs-on (Line: 53, Col: 14): Error parsing fromJson,CumulusDS/workflows/.github/workflows/serverless-unit.yml@runs-on (Line: 53, Col: 14): Error parsing undefined value. Path '', line 1, position 2.,CumulusDS/workflows/.github/workflows/serverless-unit.yml@runs-on (Line: 53, Col: 14): Unexpected value ''
+    runs-on: ${{ inputs.runsOn }}
     timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}
     steps:
       - name: Setup
