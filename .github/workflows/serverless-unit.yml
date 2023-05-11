@@ -50,7 +50,7 @@ on:
 jobs:
   unit:
     name: Unit
-    runs-on: ${{ inputs.runsOnLabel }}
+    runs-on: ${{ fromJSON(inputs.runsOnLabel) }}
     timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}
     steps:
       - name: Setup
