@@ -191,7 +191,7 @@ jobs:
         if: ${{ startsWith(inputs.config, inputs.workDir) }}
         run: |
           echo "inputs.config starts with inputs.workDir!"
-          echo "args=${CONFIG#${WORKDIR}/}" >> $GITHUB_OUTPUT
+          echo "args=--config ${CONFIG#${WORKDIR}/}" >> $GITHUB_OUTPUT
         env:
           WORKDIR: ${{ inputs.workDir }}
           CONFIG: ${{ inputs.config }}
