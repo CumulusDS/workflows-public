@@ -6,6 +6,11 @@ on:
         required: false
         type: string
         default: "serverless.yml"
+      workDir:
+        description: "Working directory path to run commands from.  Appends $GITHUB_WORKSPACE"
+        required: false
+        type: string
+        default: ""
       githubEventName:
         required: false
         type: string
@@ -116,6 +121,7 @@ jobs:
     secrets: inherit
     with:
       config: ${{ inputs.config }}
+      workDir: ${{ inputs.workDir }}
       githubEventName: ${{ inputs.githubEventName }}
       githubEventAction: ${{ inputs.githubEventAction }}
       loneRegion: ${{ inputs.loneRegion }}
