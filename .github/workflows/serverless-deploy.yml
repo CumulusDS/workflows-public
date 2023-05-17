@@ -228,7 +228,7 @@ jobs:
             --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true
           if [[ "$STAGE" == "prod" ]]; then
             aws dynamodb wait table-exists --region ap-southeast-1 --table-name \
-              $SERVICE-$STAGE}-$TABLE
+              $SERVICE-$STAGE-$TABLE
             aws dynamodb update-continuous-backups --region ap-southeast-1 --table-name \
               $SERVICE-$STAGE-$TABLE \
               --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true
