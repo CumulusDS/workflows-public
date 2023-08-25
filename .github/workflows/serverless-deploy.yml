@@ -221,17 +221,29 @@ jobs:
           STAGE: ${{ matrix.stage }}
           TABLE: ${{ inputs.globalTableName }}
         run: |
+          # us-east-2 - feature stages only go to us-east-2 in dev environment due to limitations on only being able to create one replica at a time
           aws dynamodb wait table-exists --region us-east-2 --table-name \
             $SERVICE-$STAGE-$TABLE
           aws dynamodb update-continuous-backups --region us-east-2 --table-name \
             $SERVICE-$STAGE-$TABLE \
             --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true
-          if [[ "$STAGE" == "prod" ]]; then
+          
+          if [[ "$STAGE" == "prod" ]] || [[ "$STAGE" == "master" ]]; then
+            # us-west-2
+            aws dynamodb wait table-exists --region us-west-2 --table-name \
+              $SERVICE-$STAGE-$TABLE
+            aws dynamodb update-continuous-backups --region us-west-2 --table-name \
+              $SERVICE-$STAGE-$TABLE \
+              --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true
+
+            # ap-southeast-1
             aws dynamodb wait table-exists --region ap-southeast-1 --table-name \
               $SERVICE-$STAGE-$TABLE
             aws dynamodb update-continuous-backups --region ap-southeast-1 --table-name \
               $SERVICE-$STAGE-$TABLE \
               --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true
+
+            # eu-west-1
             aws dynamodb wait table-exists --region eu-west-1 --table-name \
               $SERVICE-$STAGE-$TABLE
             aws dynamodb update-continuous-backups --region eu-west-1 --table-name \
