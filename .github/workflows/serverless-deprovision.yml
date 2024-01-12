@@ -148,6 +148,13 @@ jobs:
           duration_seconds: ${{ inputs.durationSeconds }}
           aws_access_key_id: ${{ secrets[inputs.awsAccessKeyId] }}
           aws_secret_access_key: ${{ secrets[inputs.awsSecretAccessKey] }}
+      - name: Build (if package.json key exists)
+        run: |
+          if [[ $(cat package.json | jq '.scripts.build') == null ]]; then 
+            echo "yarn build is not required"
+          else
+            yarn build
+          fi
       - name: Remove global tables (conditional)
         # delete the us-east-2 replica from us-east-1 matrix job first to enable deletion of the us-east-1 stack.
         if: | # us-east-2 stack doesn't care about the table since it isn't a part of the stack in us-east-2
