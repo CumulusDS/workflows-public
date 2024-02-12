@@ -2,11 +2,16 @@ name: Package Publish
 on:
   workflow_call:
     inputs:
+      access:
+        description: "The access for the published package (public or restricted)"
+        required: false
+        type: string
+        default: "restricted"
       nodeVersion:
         description: "Version of Node to use"
         required: false
         type: string
-        default: "14"
+        default: "20"
       ref:
         description: "Ref to checkout.  Should be blank in most cases to let the system determine"
         required: false
@@ -38,7 +43,7 @@ on:
         type: string
         default: "false"
       workspace:
-        description: "specific workspoace to run against"
+        description: "specific workspace to run against"
         required: false
         type: string
         default: ""
@@ -63,13 +68,13 @@ jobs:
       # publish
       - name: Publish (packages/hybrid)
         if: inputs.workspaces != 'true' && inputs.workspace == ''
-        run: yarn npm publish
+        run: yarn npm publish --access ${{ inputs.access }}
       - name: Publish (all workspaces)
         if: inputs.workspaces == 'true' && inputs.workspace == ''
-        run: yarn workspaces foreach --no-private npm publish
+        run: yarn workspaces foreach --no-private npm publish --access ${{ inputs.access }}
       - name: Publish ${{ inputs.workspace }}
         if: inputs.workspaces != 'true' && inputs.workspace != ''
-        run: yarn workspaces foreach --include ${{ inputs.workspace }} run publish
+        run: yarn workspace ${{ inputs.workspace }} run npm publish --access ${{ inputs.access }}
       # $GITHUB_STEP_SUMMARY - success
       - name: Summary (packages/hybrid)
         if: success() && inputs.workspaces != 'true' && inputs.workspace == ''
