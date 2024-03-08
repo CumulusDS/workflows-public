@@ -171,6 +171,19 @@ jobs:
             $SERVICE-$STAGE-$TABLE
           sleep 60 # wait for last writes to us-east-1 table
         continue-on-error: true
+      - name: workdir vs config
+        id: workdir-vs-config
+        if: ${{ startsWith(inputs.config, inputs.workDir) }}
+        run: |
+          echo "inputs.config starts with inputs.workDir!"
+          echo "args=--config ${CONFIG#${WORKDIR}/}" >> $GITHUB_OUTPUT
+        env:
+          WORKDIR: ${{ inputs.workDir }}
+          CONFIG: ${{ inputs.config }}
+      - name: args
+        id: args
+        if: ${{ !startsWith(inputs.config, inputs.workDir) }}
+        run: echo "args=--config ${{ inputs.config }}" >> "$GITHUB_OUTPUT"
       - name: serverless remove
         uses: CumulusDS/sls-deploy-remove-action@v1
         with:
@@ -180,4 +193,4 @@ jobs:
           verbose: true
           debug: false
           workDir: ${{ inputs.workDir }}
-          args: --config ${{ inputs.config }}
+          args: ${{ steps.workdir-vs-config.outputs.args || steps.args.outputs.args }}
