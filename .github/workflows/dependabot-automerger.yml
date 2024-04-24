@@ -2,6 +2,11 @@ name: Dependabot AutoMerger
 on:
   workflow_call:
     inputs:
+      runsOn:
+        description: "Runner to use.  Default is 'ubuntu-22.04'"
+        required: false
+        type: string
+        default: "ubuntu-22.04"
       mergeTries:
         description: "how many times to attempt merging"
         required: false
@@ -17,7 +22,7 @@ jobs:
     name: Dependabot AutoMerger
     if: github.actor == 'dependabot[bot]'
     timeout-minutes: 20
-    runs-on: ubuntu-22.04
+    runs-on: ${{ inputs.runsOn }}
     steps:
       - name: Wait
         uses: kibertoad/wait-action@1.0.1
