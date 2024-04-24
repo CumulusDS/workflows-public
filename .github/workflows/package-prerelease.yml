@@ -2,6 +2,11 @@ name: Package Publish
 on:
   workflow_call:
     inputs:
+      runsOn:
+        description: "Runner to use.  Default is 'ubuntu-22.04'"
+        required: false
+        type: string
+        default: "ubuntu-22.04"
       githubEventName:
         required: false
         type: string
@@ -44,7 +49,7 @@ on:
 jobs:
   prerelease:
     name: Publish Prerelease
-    runs-on: ubuntu-22.04
+    runs-on: ${{ inputs.runsOn }}
     timeout-minutes: 10
     steps:
       - name: Setup

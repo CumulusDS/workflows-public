@@ -2,6 +2,11 @@ name: Stale Stack Cleanup
 on:
   workflow_call:
     inputs:
+      runsOn:
+        description: "Runner to use.  Default is 'ubuntu-22.04'"
+        required: false
+        type: string
+        default: "ubuntu-22.04"
       file:
         description: "File to get yaml properties from if not defined with the service input Required: false Default: 'serverless.yml'"
         required: false
@@ -45,7 +50,7 @@ on:
 jobs:
   cleanup:
     name: Stack Cleanup
-    runs-on: ubuntu-22.04
+    runs-on: ${{ inputs.runsOn }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
