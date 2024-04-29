@@ -179,7 +179,7 @@ jobs:
       # comments
       - name: cfn-nag-scan ${{ inputs.file }}
         id: cfn-nag
-        uses: CumulusDS/cfn-nag-action@v1
+        uses: CumulusDS/cfn-nag-action@master
         if: always() && env.UPDATED == 'true'
         with:
           path: ${{ env.FILEPATH }}
@@ -189,7 +189,8 @@ jobs:
         uses: CumulusDS/cfn-lint-action@master
         if: always() && env.UPDATED == 'true'
         with:
-          args: ${{ env.FILEPATH }} -I --format pretty
+          path: ${{ env.FILEPATH }}
+          args: -I --format pretty
       - name: Check for existing cfn ${{ inputs.file }} comment on PR
         id: fc
         uses: peter-evans/find-comment@v2
