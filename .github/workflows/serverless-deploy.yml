@@ -116,6 +116,32 @@ jobs:
       matrixStage:  ${{ steps.set-matrix.outputs.matrixStages }}
     timeout-minutes: 5
     steps:
+      # list of blockers - markdown
+      - name: Find all release blocking issues
+        id: blocker-list
+        uses: lee-dohm/select-matching-issues@v1
+        if: inputs.githubEventName == 'release' && inputs.githubEventAction == 'released'
+        with:
+          query: 'label:blocker'
+          token: ${{ github.token }}
+          format: list
+          path: __blocker-issues-list.txt
+        continue-on-error: true
+      - name: List found issues
+        if: inputs.githubEventName == 'release' && inputs.githubEventAction == 'released'
+        run: |
+          listLines=$(cat "${{ steps.blocker-list.outputs.path }}" | grep "https://github.com/$GITHUB_REPOSITORY" | wc -l)
+          if [[ "${listLines}" != "0" ]]; then
+            echo "We found $listLines issues blocking release!"
+            echo "We found $listLines issues blocking release!" >> $GITHUB_STEP_SUMMARY
+            cat ${{ steps.blocker-list.outputs.path }}
+            cat ${{ steps.blocker-list.outputs.path }} >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "No release-blocking issues!"
+            rm -rf "${{ steps.blocker-list.outputs.path }}"
+          fi
+        continue-on-error: false
       - name: Checkout
         uses: actions/checkout@v3
         with:
