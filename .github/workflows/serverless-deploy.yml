@@ -122,7 +122,7 @@ jobs:
         uses: lee-dohm/select-matching-issues@v1
         if: inputs.githubEventName == 'release' && inputs.githubEventAction == 'released'
         with:
-          query: 'label:blocker'
+          query: 'label:blocker is:open'
           token: ${{ github.token }}
           format: list
           path: __blocker-issues-list.txt
