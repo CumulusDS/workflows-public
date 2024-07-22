@@ -210,6 +210,9 @@ jobs:
         run: |
           echo "matrix.region: ${{ matrix.region }}"
           echo "inputs.globalTableName: ${{ inputs.globalTableName }}"
+          echo "inputs.serverlessArgs: ${{ inputs.serverlessArgs }}"
+          echo "inputs.config: ${{ inputs.config }}"
+          echo "inputs.workDir: ${{ inputs.workDir }}"
       - name: Build (if package.json key exists)
         run: |
           if [[ $(cat package.json | jq '.scripts.build') == null ]]; then 
@@ -222,12 +225,8 @@ jobs:
         if: ${{ startsWith(inputs.config, inputs.workDir) }}
         run: |
           echo "inputs.config starts with inputs.workDir!"
-          #arguments=()
-          #arguments+="${{ inputs.serverlessArgs }}"
-          #echo "debug: arguments is ${arguments[@]}"
           arguments="${{ inputs.serverlessArgs }} --config ${CONFIG#${WORKDIR}/"
-          echo "debug: arguments is ${arguments[@]}"
-          #echo "args=--config ${CONFIG#${WORKDIR}/}" >> $GITHUB_OUTPUT
+          echo "debug: arguments is ${arguments}"
           echo "args=${arguments}" >> $GITHUB_OUTPUT
         env:
           WORKDIR: ${{ inputs.workDir }}
