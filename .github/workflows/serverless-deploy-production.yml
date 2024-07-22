@@ -110,6 +110,11 @@ on:
         required: false
         type: string
         default: ""
+      nodeOptions:
+        description: "additional node options"
+        required: false
+        type: string
+        default: ""
 jobs:
   preNotifier:
     name: Release Begin Notifier
@@ -145,6 +150,7 @@ jobs:
       globalTableName: ${{ inputs.globalTableName }}
       timeoutMinutes: ${{ inputs.timeoutMinutes }}
       serverlessArgs: ${{ inputs.serverlessArgs }}
+      nodeOptions: ${{ inputs.nodeOptions }}
   notify:
     name: Release Notifier
     runs-on: ubuntu-22.04

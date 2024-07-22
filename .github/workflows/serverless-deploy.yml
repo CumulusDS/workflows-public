@@ -100,6 +100,11 @@ on:
         required: false
         type: string
         default: ""
+      nodeOptions:
+        description: "additional node options"
+        required: false
+        type: string
+        default: ""
     outputs:
       matrixStages:
         description: "Stage used in output matrix"
@@ -178,6 +183,8 @@ jobs:
         stage: ${{fromJson(needs.matrix.outputs.matrixStage)}}
         region: ${{fromJson(needs.matrix.outputs.matrixRegion)}}
       fail-fast: false
+    env:
+      NODE_OPTIONS: "${{ inputs.nodeOptions }}"
     steps:
       - name: Setup
         uses: CumulusDS/workflow-setup-action@v2
@@ -226,10 +233,6 @@ jobs:
         run: |
           echo "inputs.config starts with inputs.workDir!"
           echo "args=--config ${CONFIG#${WORKDIR}/}" >> $GITHUB_OUTPUT
-          
-          #arguments="${{ inputs.serverlessArgs }} --config ${CONFIG#${WORKDIR}/"
-          #echo "debug: arguments is ${arguments}"
-          #echo "args=${arguments}" >> $GITHUB_OUTPUT
         env:
           WORKDIR: ${{ inputs.workDir }}
           CONFIG: ${{ inputs.config }}
@@ -239,11 +242,6 @@ jobs:
         run: |
           echo "inputs.config does not start with inputs.workDir."
           echo "args=--config ${{ inputs.config }}" >> "$GITHUB_OUTPUT"
-          
-          #arguments=()
-          #arguments+="${{ inputs.serverlessArgs }}"
-          #arguments+="${{ inputs.serverlessArgs }} --config ${{ inputs.config }}"
-          #echo "args=${arguments}" >> $GITHUB_OUTPUT
       - name: Global Table Wait (conditional)
         if: | # Only needed from us-east-1 region as primary table is created here
           matrix.region == 'us-east-1' && inputs.globalTableName != ''
