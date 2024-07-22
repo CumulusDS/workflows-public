@@ -222,13 +222,13 @@ jobs:
         if: ${{ startsWith(inputs.config, inputs.workDir) }}
         run: |
           echo "inputs.config starts with inputs.workDir!"
-          arguments=()
-          arguments+="${{ inputs.serverlessArgs }}"
-          echo "debug: arguments is ${arguments[@]}"
-          arguments+="--config ${CONFIG#${WORKDIR}/"
+          #arguments=()
+          #arguments+="${{ inputs.serverlessArgs }}"
+          #echo "debug: arguments is ${arguments[@]}"
+          arguments="${{ inputs.serverlessArgs }} --config ${CONFIG#${WORKDIR}/"
           echo "debug: arguments is ${arguments[@]}"
           #echo "args=--config ${CONFIG#${WORKDIR}/}" >> $GITHUB_OUTPUT
-          echo "args=${arguments[@]}" >> $GITHUB_OUTPUT
+          echo "args=${arguments}" >> $GITHUB_OUTPUT
         env:
           WORKDIR: ${{ inputs.workDir }}
           CONFIG: ${{ inputs.config }}
@@ -238,9 +238,9 @@ jobs:
         run: |
           arguments=()
           arguments+="${{ inputs.serverlessArgs }}"
-          arguments+="--config ${{ inputs.config }}"
+          arguments+="${{ inputs.serverlessArgs }} --config ${{ inputs.config }}"
           #echo "args=--config ${{ inputs.config }}" >> "$GITHUB_OUTPUT"
-          echo "args=${arguments[@]}" >> $GITHUB_OUTPUT
+          echo "args=${arguments}" >> $GITHUB_OUTPUT
       - name: Global Table Wait (conditional)
         if: | # Only needed from us-east-1 region as primary table is created here
           matrix.region == 'us-east-1' && inputs.globalTableName != ''
