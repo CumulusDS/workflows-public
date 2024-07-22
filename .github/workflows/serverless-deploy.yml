@@ -95,6 +95,11 @@ on:
         required: false
         type: string
         default: "20"
+      serverlessArgs:
+        description: "arguments to pass to serverless"
+        required: false
+        type: string
+        default: ""
     outputs:
       matrixStages:
         description: "Stage used in output matrix"
@@ -217,14 +222,23 @@ jobs:
         if: ${{ startsWith(inputs.config, inputs.workDir) }}
         run: |
           echo "inputs.config starts with inputs.workDir!"
-          echo "args=--config ${CONFIG#${WORKDIR}/}" >> $GITHUB_OUTPUT
+          arguments=()
+          arguments+="${{ inputs.serverlessArgs }}"
+          arguments+="--config ${CONFIG#${WORKDIR}/"
+          #echo "args=--config ${CONFIG#${WORKDIR}/}" >> $GITHUB_OUTPUT
+          echo "args=${arguments}" >> $GITHUB_OUTPUT
         env:
           WORKDIR: ${{ inputs.workDir }}
           CONFIG: ${{ inputs.config }}
       - name: args
         id: args
         if: ${{ !startsWith(inputs.config, inputs.workDir) }}
-        run: echo "args=--config ${{ inputs.config }}" >> "$GITHUB_OUTPUT"
+        run: |
+          arguments=()
+          arguments+="${{ inputs.serverlessArgs }}"
+          arguments+="--config ${{ inputs.config }}"
+          #echo "args=--config ${{ inputs.config }}" >> "$GITHUB_OUTPUT"
+          echo "args=${arguments}" >> $GITHUB_OUTPUT
       - name: Global Table Wait (conditional)
         if: | # Only needed from us-east-1 region as primary table is created here
           matrix.region == 'us-east-1' && inputs.globalTableName != ''
