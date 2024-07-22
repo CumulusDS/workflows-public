@@ -95,6 +95,16 @@ on:
         required: false
         type: string
         default: "20"
+      serverlessArgs:
+        description: "arguments to pass to serverless"
+        required: false
+        type: string
+        default: ""
+      nodeOptions:
+        description: "additional node options"
+        required: false
+        type: string
+        default: ""
     outputs:
       matrixStages:
         description: "Stage used in output matrix"
@@ -173,6 +183,8 @@ jobs:
         stage: ${{fromJson(needs.matrix.outputs.matrixStage)}}
         region: ${{fromJson(needs.matrix.outputs.matrixRegion)}}
       fail-fast: false
+    env:
+      NODE_OPTIONS: "${{ inputs.nodeOptions }}"
     steps:
       - name: Setup
         uses: CumulusDS/workflow-setup-action@v2
@@ -205,6 +217,9 @@ jobs:
         run: |
           echo "matrix.region: ${{ matrix.region }}"
           echo "inputs.globalTableName: ${{ inputs.globalTableName }}"
+          echo "inputs.serverlessArgs: ${{ inputs.serverlessArgs }}"
+          echo "inputs.config: ${{ inputs.config }}"
+          echo "inputs.workDir: ${{ inputs.workDir }}"
       - name: Build (if package.json key exists)
         run: |
           if [[ $(cat package.json | jq '.scripts.build') == null ]]; then 
@@ -224,7 +239,9 @@ jobs:
       - name: args
         id: args
         if: ${{ !startsWith(inputs.config, inputs.workDir) }}
-        run: echo "args=--config ${{ inputs.config }}" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "inputs.config does not start with inputs.workDir."
+          echo "args=--config ${{ inputs.config }}" >> "$GITHUB_OUTPUT"
       - name: Global Table Wait (conditional)
         if: | # Only needed from us-east-1 region as primary table is created here
           matrix.region == 'us-east-1' && inputs.globalTableName != ''
@@ -237,7 +254,7 @@ jobs:
           service: ${{ steps.role.outputs.service }}
           stack_policy_file: ${{ inputs.stackPolicyFile }}
           verbose: true
-          args: ${{ steps.workdir-vs-config.outputs.args || steps.args.outputs.args }}
+          args: ${{ steps.workdir-vs-config.outputs.args || steps.args.outputs.args }} ${{ inputs.serverlessArgs }}
           workDir: ${{ inputs.workDir }}
       - name: Enable Global Table PITR (conditional)
         if: | # enable from us-east-1 region only after replicas are created

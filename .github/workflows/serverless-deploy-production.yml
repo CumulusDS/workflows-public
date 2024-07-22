@@ -105,6 +105,16 @@ on:
         required: false
         type: string
         default: "20"
+      serverlessArgs:
+        description: "arguments to pass to serverless"
+        required: false
+        type: string
+        default: ""
+      nodeOptions:
+        description: "additional node options"
+        required: false
+        type: string
+        default: ""
 jobs:
   preNotifier:
     name: Release Begin Notifier
@@ -139,6 +149,8 @@ jobs:
       runsOn: ${{ inputs.runsOn }}
       globalTableName: ${{ inputs.globalTableName }}
       timeoutMinutes: ${{ inputs.timeoutMinutes }}
+      serverlessArgs: ${{ inputs.serverlessArgs }}
+      nodeOptions: ${{ inputs.nodeOptions }}
   notify:
     name: Release Notifier
     runs-on: ubuntu-22.04
