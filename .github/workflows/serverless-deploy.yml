@@ -224,9 +224,11 @@ jobs:
           echo "inputs.config starts with inputs.workDir!"
           arguments=()
           arguments+="${{ inputs.serverlessArgs }}"
+          echo "debug: arguments is ${arguments[@]}"
           arguments+="--config ${CONFIG#${WORKDIR}/"
+          echo "debug: arguments is ${arguments[@]}"
           #echo "args=--config ${CONFIG#${WORKDIR}/}" >> $GITHUB_OUTPUT
-          echo "args=${arguments}" >> $GITHUB_OUTPUT
+          echo "args=${arguments[@]}" >> $GITHUB_OUTPUT
         env:
           WORKDIR: ${{ inputs.workDir }}
           CONFIG: ${{ inputs.config }}
@@ -238,7 +240,7 @@ jobs:
           arguments+="${{ inputs.serverlessArgs }}"
           arguments+="--config ${{ inputs.config }}"
           #echo "args=--config ${{ inputs.config }}" >> "$GITHUB_OUTPUT"
-          echo "args=${arguments}" >> $GITHUB_OUTPUT
+          echo "args=${arguments[@]}" >> $GITHUB_OUTPUT
       - name: Global Table Wait (conditional)
         if: | # Only needed from us-east-1 region as primary table is created here
           matrix.region == 'us-east-1' && inputs.globalTableName != ''
