@@ -225,9 +225,11 @@ jobs:
         if: ${{ startsWith(inputs.config, inputs.workDir) }}
         run: |
           echo "inputs.config starts with inputs.workDir!"
-          arguments="${{ inputs.serverlessArgs }} --config ${CONFIG#${WORKDIR}/"
-          echo "debug: arguments is ${arguments}"
-          echo "args=${arguments}" >> $GITHUB_OUTPUT
+          echo "args=--config ${CONFIG#${WORKDIR}/}" >> $GITHUB_OUTPUT
+          
+          #arguments="${{ inputs.serverlessArgs }} --config ${CONFIG#${WORKDIR}/"
+          #echo "debug: arguments is ${arguments}"
+          #echo "args=${arguments}" >> $GITHUB_OUTPUT
         env:
           WORKDIR: ${{ inputs.workDir }}
           CONFIG: ${{ inputs.config }}
@@ -235,11 +237,13 @@ jobs:
         id: args
         if: ${{ !startsWith(inputs.config, inputs.workDir) }}
         run: |
-          arguments=()
-          arguments+="${{ inputs.serverlessArgs }}"
-          arguments+="${{ inputs.serverlessArgs }} --config ${{ inputs.config }}"
-          #echo "args=--config ${{ inputs.config }}" >> "$GITHUB_OUTPUT"
-          echo "args=${arguments}" >> $GITHUB_OUTPUT
+          echo "inputs.config does not start with inputs.workDir."
+          echo "args=--config ${{ inputs.config }}" >> "$GITHUB_OUTPUT"
+          
+          #arguments=()
+          #arguments+="${{ inputs.serverlessArgs }}"
+          #arguments+="${{ inputs.serverlessArgs }} --config ${{ inputs.config }}"
+          #echo "args=${arguments}" >> $GITHUB_OUTPUT
       - name: Global Table Wait (conditional)
         if: | # Only needed from us-east-1 region as primary table is created here
           matrix.region == 'us-east-1' && inputs.globalTableName != ''
@@ -252,7 +256,7 @@ jobs:
           service: ${{ steps.role.outputs.service }}
           stack_policy_file: ${{ inputs.stackPolicyFile }}
           verbose: true
-          args: ${{ steps.workdir-vs-config.outputs.args || steps.args.outputs.args }}
+          args: ${{ steps.workdir-vs-config.outputs.args || steps.args.outputs.args }} ${{ inputs.serverlessArgs }}
           workDir: ${{ inputs.workDir }}
       - name: Enable Global Table PITR (conditional)
         if: | # enable from us-east-1 region only after replicas are created
