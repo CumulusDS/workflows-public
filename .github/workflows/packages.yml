@@ -3,10 +3,10 @@ on:
   workflow_call:
     inputs:
       runsOn:
-        description: "Runner to use.  Default is 'ubuntu-22.04'"
+        description: "Runner to use.  Default is 'ubuntu-latest'"
         required: false
         type: string
-        default: "ubuntu-22.04"
+        default: "ubuntu-latest"
 jobs:
   yarn:
     name: Yarn Lock Changes
@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Yarn Lock Changes
-        uses: CumulusDS/yarn-lock-changes-action@v1
+        uses: CumulusDS/workflows-public/.github/actions/yarn-lock-changes-action@master
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
   deprecation:
@@ -23,4 +23,4 @@ jobs:
     runs-on: ${{ inputs.runsOn }}
     steps:
       - name: Check for deprecated packages
-        uses: CumulusDS/deprecated-packages-action@v1
+        uses: CumulusDS/workflows-public/.github/actions/deprecated-packages-action@master

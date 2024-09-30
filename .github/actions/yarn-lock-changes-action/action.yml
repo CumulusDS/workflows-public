@@ -1,0 +1,35 @@
+name: 'yarn-lock-changes-action'
+description: 'Checks yarn.lock for changes on pull requests'
+inputs:
+  token:
+    description: 'Repository GITHUB_TOKEN which allows action to make calls to the GitHub API'
+    required: true
+  collapsibleThreshold:
+    description: 'Number of lock changes, which will result in collapsed comment content and an addition of changes summary table'
+    required: false
+    default: '25'
+  failOnDowngrade:
+    description: 'When a dependency downgrade is detected, fail the action. Comment will still be posted'
+    required: false
+    default: 'false'
+  path:
+    description: 'Path to the yarn.lock file in the repository. Default value points to the file at project root'
+    required: false
+    default: 'yarn.lock'
+  updateComment:
+    description: 'Update the comment on each new commit. If value is set to false, bot will post a new comment on each change'
+    required: false
+    default: 'true'
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Yarn Lock Changes
+      uses: Simek/yarn-lock-changes@v0.12.0
+      with:
+        token: "${{ inputs.token }}"
+        collapsibleThreshold: "${{ inputs.collapsibleThreshold }}"
+        failOnDowngrade: "${{ inputs.failOnDowngrade }}"
+        path: "${{ inputs.path }}"
+        updateComment: "${{ inputs.updateComment }}"

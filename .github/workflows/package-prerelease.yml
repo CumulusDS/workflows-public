@@ -3,10 +3,10 @@ on:
   workflow_call:
     inputs:
       runsOn:
-        description: "Runner to use.  Default is 'ubuntu-22.04'"
+        description: "Runner to use.  Default is 'ubuntu-latest'"
         required: false
         type: string
-        default: "ubuntu-22.04"
+        default: "ubuntu-latest"
       githubEventName:
         required: false
         type: string
@@ -53,7 +53,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Setup
-        uses: CumulusDS/workflow-setup-action@v2
+        uses: CumulusDS/workflows-public/.github/actions/workflow-setup-action@master
         with:
           nodeVersion: ${{ inputs.nodeVersion }}
           npmToken: ${{ secrets[inputs.npmjsToken] }}
@@ -61,11 +61,11 @@ jobs:
           packageManager: ${{ inputs.packageManager }}
       - name: Set feature stage
         id: feature
-        uses: CumulusDS/feature-stage-action@v2
+        uses: CumulusDS/workflows-public/.github/actions/feature-stage-action@master
         with:
           githubEventName: ${{ inputs.githubEventName }}
       - name: set node publish token
-        uses: CumulusDS/workflows/.github/actions/set-publish-token@master
+        uses: CumulusDS/workflows-public/.github/actions/set-publish-token@master
         with:
           packageManager: ${{ inputs.packageManager }}
           npmjsPublishToken: ${{ secrets[inputs.npmjsPublishToken] }}

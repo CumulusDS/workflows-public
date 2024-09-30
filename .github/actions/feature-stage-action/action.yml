@@ -1,0 +1,167 @@
+name: 'feature-stage-action'
+description: 'Determine feature stage for a given event'
+inputs:
+  githubEventName:
+    description: "GitHub event information"
+    required: true
+    default: "${{ github.event_name }}"
+  githubEventAction:
+    description: "Github event action"
+    required: false
+    default: "${{ github.event.action }}"
+  githubEventRef:
+    description: "GitHub event ref.  Set this for delete event"
+    required: false
+    default: "${{ github.event.ref }}"
+  siteName:
+    description: "Boolean, whether or not to issue a site name as well"
+    required: false
+    default: "false"
+outputs:
+  stage:
+    description: "The stage"
+    value: "${{ steps.stage.outputs.stage }}"
+  repository:
+    description: "The Repository name"
+    value: "${{ steps.repo.outputs.repository }}"
+  siteName:
+    description: "The site name"
+    value: "${{ steps.repo.outputs.siteName }}"
+  trigger:
+    description: "The event causing the workflow to run"
+    value: "${{ steps.event.outputs.trigger }}"
+  tag:
+    description: "The event causing the workflow to run"
+    value: "${{ steps.stage.outputs.tag }}"
+runs:
+  using: "composite"
+  steps:
+    - name: Set repository name environment variable
+      id: repo
+      run: |
+        repository=${REPOSITORY#*/}
+        echo "REPO=$repository" >> $GITHUB_ENV
+        echo "repository=$repository" >> $GITHUB_OUTPUT
+      shell: bash
+      env:
+        REPOSITORY: ${{ github.repository }}
+    - name: Determine event trigger
+      id: event
+      run: |
+        if [[ "${{ inputs.githubEventName }}" == "workflow_dispatch" ]]; then
+          echo "trigger is workflow dispatch"
+          echo "trigger=workflow_dispatch" >> $GITHUB_OUTPUT
+        elif [[ "${{ inputs.githubEventName }}" == "pull_request_target" ]]; then
+          echo "trigger is pull_request_target"
+          echo "trigger=pull_request_target" >> $GITHUB_OUTPUT
+        elif [[ "${{ inputs.githubEventName }}" == "delete" ]]; then
+          echo "trigger is branch delete"
+          echo "trigger=delete" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.event.ref }}" == refs/tags/v* ]]; then
+          echo "trigger is tag"
+          echo "trigger=tag" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.event_name }}" == "push" ]] && [[ "${{ github.event.ref }}" == "refs/heads/master" ]]; then
+          echo "trigger is master"
+          echo "trigger=master" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.event_name }}" == "push" ]] && [[ "${{ github.event.ref }}" != "refs/heads/master" ]]; then
+          echo "trigger is branchPush"
+          echo "trigger=branchPush" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.event_name }}" == "pull_request" ]] && [[ "${{ github.event.action }}" != "closed" ]] && [[ "${{ github.event.pull_request.merged }}" != "true" ]]; then
+          echo "trigger is prCheck"
+          echo "trigger=prCheck" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.event_name }}" == "pull_request" ]] && [[ "${{ github.event.action }}" == "closed" ]] && [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
+          echo "trigger is prMerged"
+          echo "trigger=prMerged" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.event_name }}" == "pull_request" ]] && [[ "${{ github.event.action }}" == "closed" ]] && [[ "${{ github.event.pull_request.merged }}" != "true" ]]; then
+          echo "trigger is prSimplyClosed (without merge)"
+          echo "trigger=prSimplyClosed" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.event.action }}" == "released" ]]; then
+          echo "trigger is release"
+          echo "trigger=release" >> $GITHUB_OUTPUT
+        fi
+      shell: bash
+    - name: Determine feature stage
+      id: stage
+      run: |
+        echo "::group::Set Feature Stage"
+        if [[ "${{ steps.event.outputs.trigger }}" == "workflow_dispatch" ]]; then
+          echo "*** workflow dispatch"
+          echo BRANCH is ${{ github.event.inputs.branch }}
+          EVENT=${{ github.event.inputs.branch }}
+          branchLower=$(echo $EVENT | tr '[:upper:]' '[:lower:]')
+        else
+          echo "*** Not workflow dispatch"
+          if [[ "${{ steps.event.outputs.trigger }}" == "pull_request_target" ]]; then
+            echo "Running against PR Target event!"
+            HEAD_REF=${{ github.head_ref }}
+            BRANCH=${HEAD_REF#dependabot/*/}
+            BRANCH=${BRANCH#cumulusds/}
+          elif [[ "${{ steps.event.outputs.trigger }}" == "delete" ]]; then
+            echo "Running against branch delete event!"
+            EVENT_REF=${{ inputs.githubEventRef }}
+            BRANCH=${EVENT_REF#refs/heads/}
+          elif [[ "${{ steps.event.outputs.trigger }}" == "tag" ]]; then
+            echo "Running against tag event!"
+            EVENT_REF=${{ inputs.githubEventRef }}
+            TAG=${EVENT_REF#refs/tags/}
+            BRANCH="tag/${TAG}"
+          elif [[ "${{ steps.event.outputs.trigger }}" == "release" ]]; then
+            echo "Running against release event!"
+            #EVENT_REF=${{ inputs.githubEventRef }} # this is blank on Release event
+            TAG=${{ github.event.release.tag_name }}
+            BRANCH="release/${TAG}"
+          else
+            BRANCH=${GITHUB_REF#refs/heads/}
+          fi
+          echo BRANCH is $BRANCH
+          branchLower=$(echo $BRANCH | tr '[:upper:]' '[:lower:]')
+        fi
+        echo branchLower is $branchLower
+        
+        if [[ "${{ steps.event.outputs.trigger }}" == "tag" ]] || [[ "${{ steps.event.outputs.trigger }}" == "release" ]]; then
+          FEATURE=${branchLower//[^a-z0-9\/.]/-}
+          echo "FEATURE_STAGE=$FEATURE" >> $GITHUB_ENV
+          echo "stage=$FEATURE" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+        else
+          if [[ "${{ inputs.siteName }}" == "true" ]]; then
+            HYPHENATED_SITE_NAME=${branchLower//[^A-Za-z0-9]/-}
+            if [[ $HYPHENATED_SITE_NAME == dependabot-npm-and-yarn-cumulusds-* ]]; then
+              HYPHENATED_SITE_NAME=${SITE_NAME#"dependabot-npm-and-yarn-cumulusds-"}
+            elif [[ $HYPHENATED_SITE_NAME == dependabot-npm-and-yarn-* ]]; then
+              HYPHENATED_SITE_NAME=${SITE_NAME#"dependabot-npm-and-yarn-"}
+            elif [[ $HYPHENATED_SITE_NAME == dependabot-github-actions-* ]]; then
+              HYPHENATED_SITE_NAME=${SITE_NAME#"dependabot-github-actions-"}
+            fi
+            SITE_NAME=${HYPHENATED_SITE_NAME//[^A-Za-z0-9]/}
+            SITE=${SITE_NAME:0:16}
+            echo SITE is $SITE
+            echo "SITE_NAME=$SITE" >> $GITHUB_ENV
+            echo "siteName=$SITE" >> $GITHUB_OUTPUT
+        
+            STACK=$(echo ${HYPHENATED_SITE_NAME} | awk 'BEGIN{FS="";RS="-";ORS=""} {$0=toupper(substr($0,1,1)) substr($0,2)} 1')
+            echo "STACK_NAME=$STACK" >> $GITHUB_ENV
+            echo "STACK_NAME=$STACK" >> $GITHUB_OUTPUT
+          fi
+          FEATURE=${branchLower//[^A-Za-z0-9]/}
+          echo FEATURE is $FEATURE
+          if [[ $FEATURE == dependabot-npm-and-yarn-cumulusds-* ]]; then
+            FEATURE=${FEATURE#"dependabot-npm-and-yarn-cumulusds-"}
+          elif [[ $FEATURE == dependabot-npm-and-yarn-* ]]; then
+            FEATURE=${FEATURE#"dependabot-npm-and-yarn-"}
+          elif [[ $FEATURE == dependabot-github-actions-* ]]; then
+            FEATURE=${FEATURE#"dependabot-github-actions-"}
+          elif [[ $FEATURE == dependabotnpmandyarncumulusds* ]]; then
+            FEATURE=${FEATURE#"dependabotnpmandyarncumulusds"}
+          elif [[ $FEATURE == dependabotnpmandyarn* ]]; then
+            FEATURE=${FEATURE#"dependabotnpmandyarn"}
+          elif [[ $FEATURE == dependabotgithubactions* ]]; then
+            FEATURE=${FEATURE#"dependabotgithubactions"}
+          fi
+          STAGE=${FEATURE:0:16}
+          echo STAGE is $STAGE
+          echo "FEATURE_STAGE=$STAGE" >> $GITHUB_ENV
+          echo "stage=$STAGE" >> $GITHUB_OUTPUT
+        fi
+        echo "::endgroup::"
+      shell: bash

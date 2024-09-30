@@ -1,0 +1,21 @@
+name: 'unit-end-action'
+description: 'Composite action for end of unit tests'
+inputs:
+  uploadArtifactName:
+    description: "Name of uploaded artifact"
+    required: false
+    default: upload-artifacts
+  artifactPath:
+    description: "Path to upload as an artifact"
+    required: false
+    default: "var"
+outputs: {}
+runs:
+  using: "composite"
+  steps:
+    - name: Upload artifacts
+      id: upload-artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.uploadArtifactName }}
+        path: ${{ inputs.artifactPath }}

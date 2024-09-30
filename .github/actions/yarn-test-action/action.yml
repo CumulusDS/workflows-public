@@ -1,0 +1,61 @@
+name: 'Yarn Tests'
+description: 'Check Licenses, Start Flow Server, Yarn Test'
+inputs:
+  args:
+    description: "Additional arguments for yarn test command"
+    default: ""
+    required: false
+  workspace:
+    description: "specific workspace to run serverless unit against, should be blank or only one for serverless project"
+    required: false
+    default: ""
+  workspaces:
+    description: "if set to true, runs against ALL workspaces"
+    required: false
+    default: ""
+outputs: {}
+runs:
+  using: "composite"
+  steps:
+    - name: Check Licenses
+      id: check-licenses
+      run: |
+        echo "::group::Check Licenses"
+        yarn build:license-checker
+        echo "::endgroup::"
+      shell: bash
+    - name: Start Flow Server
+      id: start-flow-server
+      run: |
+        echo "::group::Start Flow Server"
+        yarn flow start
+        echo "::endgroup::"
+      shell: bash
+    - name: Yarn test
+      id: yarn-test
+      if: inputs.workspaces != 'true' && inputs.workspace == ''
+      run: |
+        echo "::group::yarn test"
+        args+=(${{ inputs.args }})
+        yarn test "${args[@]}"
+        echo "::endgroup::"
+      shell: bash
+    - name: Yarn test workspaces
+      id: yarn-test-all-workspaces
+      if: inputs.workspaces == 'true' && inputs.workspace == ''
+      run: |
+        echo "::group::yarn test all workspaces"
+        args+=(${{ inputs.args }})
+        yarn workspaces foreach --verbose run test "${args[@]}"
+        #yarn test "${args[@]}"
+        echo "::endgroup::"
+      shell: bash
+    - name: Yarn test ${{ inputs.workspace }}
+      id: yarn-test-workspace
+      if: inputs.workspaces != 'true' && inputs.workspace != ''
+      run: |
+        echo "::group::yarn test workspace"
+        args+=(${{ inputs.args }})
+        yarn workspace ${{ inputs.workspace }} test "${args[@]}"
+        echo "::endgroup::"
+      shell: bash

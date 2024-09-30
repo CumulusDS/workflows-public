@@ -1,0 +1,131 @@
+name: 'workflow-setup-action'
+description: 'Composite action for workflow setup'
+inputs:
+  packageManager:
+    required: false
+    description: "using yarn or lerna for dependency management"
+    default: "yarn3"
+  nodeVersion:
+    required: false
+    description: "what node version to install"
+    default: "16"
+  npmToken:
+    required: true
+    description: "token used for NPM authentication"
+  vulnerabilityToken:
+    required: false
+    description: "token used for vulnerability checking"
+    default: ""
+  vulnerabilityLevel:
+    required: false
+    description: "Override CRITICAL level for failure on vulnerability check.  HIGH, MODERATE or LOW."
+    default: "CRITICAL"
+  vulnerabilityFail:
+    required: false
+    description: "Override failure on found vulnerabilities"
+    default: "false"
+  ref:
+    required: false
+    description: "ref to checkout"
+    default: ""
+  fetch-depth:
+    required: false
+    description: "checkout fetch-depth"
+    default: "1"
+  path:
+    required: false
+    description: "Relative path under $GITHUB_WORKSPACE to place the repository"
+    default: ""
+  clean:
+    required: false
+    description: "Whether to execute `git clean -ffdx && git reset --hard HEAD` before fetching"
+    default: "true"
+  setup_ruby:
+    description: "Whether or not to execute ruby setup action"
+    default: "false"
+    required: false
+  ruby_version:
+    description: "Desired version of Ruby"
+    default: "2.7"
+    required: false
+  ruby_bundler_cache:
+    description: "Enable Ruby bundler-cache"
+    default: "false"
+    required: false
+  repository:
+    description: "What repository to checkout"
+    default: ${{ github.repository }}
+    required: false
+  checkoutToken:
+    description: "Specific token for checkout, if checking out a different repository"
+    default: ${{ github.token }}
+    required: false
+outputs: {}
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      id: checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: ${{ inputs.fetch-depth }}
+        ref: ${{ inputs.ref }}
+        path: ${{ inputs.path }}
+        clean: ${{ inputs.clean }}
+        token: ${{ inputs.checkoutToken }}
+        repository: ${{ inputs.repository }}
+    - name: Setup Node
+      id: setup-node
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ inputs.nodeVersion }}
+    - name: Setup Ruby
+      id: setup-ruby
+      uses: ruby/setup-ruby@v1
+      if: inputs.setup_ruby == 'true'
+      with:
+        ruby-version: ${{ inputs.ruby_version }}
+        bundler-cache: ${{ inputs.ruby_bundler_cache }}
+    - name: Get yarn v1 cache directory
+      id: get-yarn-cache
+      if: inputs.packageManager == 'yarn'
+      run: |
+        echo "::group::Get yarn cache directory"
+        echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+        echo "::endgroup::"
+      shell: bash
+    - name: Get yarn v3 cache directory
+      id: get-yarn3-cache
+      if: inputs.packageManager == 'yarn3'
+      run: |
+        echo "::group::Get yarn cache directory"
+        echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
+        echo "::endgroup::"
+      shell: bash
+    - name: Restore yarn cache directory
+      id: restore-yarn-cache
+      if: inputs.packageManager == 'yarn' || inputs.packageManager == 'yarn3'
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.get-yarn3-cache.outputs.dir || steps.get-yarn-cache.outputs.dir }}
+        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-yarn-
+    - name: yarn v1 install
+      id: yarn-install
+      if: inputs.packageManager == 'yarn'
+      run: |
+        echo "::group::Yarn Install"
+        echo "//registry.npmjs.org/:_authToken=${{ inputs.npmToken }}" >> ~/.npmrc
+        yarn install --frozen-lockfile
+        echo "::endgroup::"
+      shell: bash
+    - name: yarn v3 install
+      id: yarn3-install
+      if: inputs.packageManager == 'yarn3'
+      run: |
+        echo "::group::Yarn Install"
+        yarn config set npmAuthToken ${{ inputs.npmToken }} --home
+        yarn install --immutable
+        echo "::endgroup::"
+      shell: bash
