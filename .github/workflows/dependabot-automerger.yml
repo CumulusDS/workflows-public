@@ -30,7 +30,7 @@ jobs:
           time: 30
       - name: Auto Merge
         id: auto-merge
-        uses: "pascalgn/automerge-action@v0.15.6"
+        uses: "pascalgn/automerge-action@v0.16.4"
         env:
           GITHUB_TOKEN: "${{ secrets.RELEASE_TOKEN }}"
           MERGE_LABELS: "dependencies,!config,!actions,!bug,!cloudformation,!documentation,!duplicate,!enhancement,!good first issue,!help wanted,!invalid,!prod,!question,!wontfix,!wip,!work in progress"
