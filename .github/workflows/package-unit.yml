@@ -27,11 +27,6 @@ on:
         required: false
         type: string
         default: "yarn3"
-      npmjsToken:
-        description: "NPMJS auth token"
-        required: false
-        type: string
-        default: "NPM_TOKEN_READ_ONLY"
       nodeOptions:
         description: "Node options"
         required: false
@@ -71,7 +66,6 @@ jobs:
         uses: CumulusDS/workflows-public/.github/actions/workflow-setup-action@master
         with:
           nodeVersion: ${{ inputs.nodeVersion }}
-          npmToken: ${{ secrets[inputs.npmjsToken] }}
           ref: ${{ inputs.ref }}
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}

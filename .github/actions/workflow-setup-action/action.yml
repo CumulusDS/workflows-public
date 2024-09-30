@@ -9,9 +9,6 @@ inputs:
     required: false
     description: "what node version to install"
     default: "16"
-  npmToken:
-    required: true
-    description: "token used for NPM authentication"
   vulnerabilityToken:
     required: false
     description: "token used for vulnerability checking"
@@ -86,14 +83,6 @@ runs:
       with:
         ruby-version: ${{ inputs.ruby_version }}
         bundler-cache: ${{ inputs.ruby_bundler_cache }}
-    - name: Get yarn v1 cache directory
-      id: get-yarn-cache
-      if: inputs.packageManager == 'yarn'
-      run: |
-        echo "::group::Get yarn cache directory"
-        echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-        echo "::endgroup::"
-      shell: bash
     - name: Get yarn v3 cache directory
       id: get-yarn3-cache
       if: inputs.packageManager == 'yarn3'
@@ -104,28 +93,18 @@ runs:
       shell: bash
     - name: Restore yarn cache directory
       id: restore-yarn-cache
-      if: inputs.packageManager == 'yarn' || inputs.packageManager == 'yarn3'
       uses: actions/cache@v3
       with:
-        path: ${{ steps.get-yarn3-cache.outputs.dir || steps.get-yarn-cache.outputs.dir }}
+        path: ${{ steps.get-yarn3-cache.outputs.dir }}
         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
           ${{ runner.os }}-yarn-
-    - name: yarn v1 install
-      id: yarn-install
-      if: inputs.packageManager == 'yarn'
-      run: |
-        echo "::group::Yarn Install"
-        echo "//registry.npmjs.org/:_authToken=${{ inputs.npmToken }}" >> ~/.npmrc
-        yarn install --frozen-lockfile
-        echo "::endgroup::"
       shell: bash
     - name: yarn v3 install
       id: yarn3-install
       if: inputs.packageManager == 'yarn3'
       run: |
         echo "::group::Yarn Install"
-        yarn config set npmAuthToken ${{ inputs.npmToken }} --home
         yarn install --immutable
         echo "::endgroup::"
       shell: bash

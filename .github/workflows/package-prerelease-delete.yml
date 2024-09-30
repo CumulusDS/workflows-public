@@ -35,11 +35,6 @@ on:
         required: false
         type: string
         default: "${{ github.event.ref }}"
-      npmjsToken:
-        description: "NPMJS auth token"
-        required: false
-        type: string
-        default: "NPM_TOKEN_READ_ONLY"
       npmjsPublishToken:
         description: "NPMJS token with publishing permissions"
         required: false
@@ -55,7 +50,6 @@ jobs:
         uses: CumulusDS/workflows-public/.github/actions/workflow-setup-action@master
         with:
           nodeVersion: ${{ inputs.nodeVersion }}
-          npmToken: ${{ secrets[inputs.npmjsToken] }}
           ref: ${{ inputs.ref }}
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}
