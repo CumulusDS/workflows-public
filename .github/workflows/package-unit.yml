@@ -104,4 +104,4 @@ jobs:
         if: always()
         uses: CumulusDS/workflows-public/.github/actions/unit-end-action@master
         with:
-          uploadArtifactName: artifact-node-${{ inputs.nodeVersions }}
+          uploadArtifactName: artifact-node-${{ matrix.node }}
