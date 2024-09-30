@@ -103,3 +103,5 @@ jobs:
       - name: Upload artifact
         if: always()
         uses: CumulusDS/workflows-public/.github/actions/unit-end-action@master
+        with:
+          uploadArtifactName: artifact-node-${{ inputs.nodeVersions }}
