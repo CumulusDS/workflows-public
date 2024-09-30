@@ -99,7 +99,6 @@ runs:
         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
           ${{ runner.os }}-yarn-
-      shell: bash
     - name: yarn v3 install
       id: yarn3-install
       if: inputs.packageManager == 'yarn3'
