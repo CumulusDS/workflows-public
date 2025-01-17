@@ -11,7 +11,7 @@ on:
         description: "The access for the published package (public or restricted)"
         required: false
         type: string
-        default: "restricted"
+        default: "public"
       nodeVersion:
         description: "Version of Node to use"
         required: false
