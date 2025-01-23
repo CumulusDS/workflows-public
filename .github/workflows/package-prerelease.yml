@@ -7,6 +7,11 @@ on:
         required: false
         type: string
         default: "ubuntu-latest"
+      access:
+        description: "The access for the published package (public or restricted)"
+        required: false
+        type: string
+        default: "public"
       githubEventName:
         required: false
         type: string
@@ -76,13 +81,13 @@ jobs:
       # publish
       - name: Publish (packages/hybrid)
         if: inputs.workspaces != 'true' && inputs.workspace == ''
-        run: yarn npm publish --tag ${{ steps.feature.outputs.stage }}
+        run: yarn npm publish --access ${{ inputs.access }} --tag ${{ steps.feature.outputs.stage }}
       - name: Publish (all workspaces)
         if: inputs.workspaces == 'true' && inputs.workspace == ''
-        run: yarn workspaces foreach --no-private npm publish --tag ${{ steps.feature.outputs.stage }}
+        run: yarn workspaces foreach --no-private npm publish --tag ${{ steps.feature.outputs.stage }} --access ${{ inputs.access }}
       - name: Publish ${{ inputs.workspace }}
         if: inputs.workspaces != 'true' && inputs.workspace != ''
-        run: yarn workspaces foreach --include ${{ inputs.workspace }} run publish --tag ${{ steps.feature.outputs.stage }}
+        run: yarn workspaces foreach --include ${{ inputs.workspace }} run publish --tag ${{ steps.feature.outputs.stage }} --access ${{ inputs.access }}
       # $GITHUB_STEP_SUMMARY
       - name: Summary (packages/hybrid)
         if: inputs.workspaces != 'true' && inputs.workspace == ''
@@ -102,9 +107,9 @@ jobs:
         run: |
           pjs=($(find . -type f -name package.json -not -path "./node_modules/*"))
           echo "package.json files found: ${pjs[@]}"
-          
+
           for version in "${pjs[@]}"; do
-            if [[ "$(jq -r '.name' ${version})" == "${{ inputs.workspace }}" ]]; then 
+            if [[ "$(jq -r '.name' ${version})" == "${{ inputs.workspace }}" ]]; then
               echo "### Published $(jq '.name' ${version}) version $(jq '.version' ${version}) to NPM" >> "$GITHUB_STEP_SUMMARY"
             fi
           done
