@@ -8,7 +8,7 @@ on:
         type: string
         default: "false"
       workspace:
-        description: "specific workspoace to run against"
+        description: "specific workspace to run against"
         required: false
         type: string
         default: ""

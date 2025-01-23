@@ -1,0 +1,17 @@
+shell=bash
+
+# don't warn over "<variable> is referenced but not assigned"
+# as the assignments come from actions.yml as env vars
+disable=SC2154
+
+enable=all                        # Enable all optional checks.
+enable=add-default-case           # Suggest adding a default case in `case` statements
+enable=avoid-nullary-conditions   # Suggest explicitly using -n in `[ $var ]`
+enable=check-extra-masked-returns # Check for additional cases where exit codes are masked
+enable=check-set-e-suppressed     # Notify when set -e is suppressed during function invocation
+enable=check-unassigned-uppercase # Turn on warnings for unassigned uppercase variables
+enable=deprecate-which            # Suggest 'command -v' instead of 'which'
+enable=quote-safe-variables       # Turn on warnings for unquoted variables with safe values
+enable=require-double-brackets    # Require [[ and warn about [ in Bash/Ksh
+enable=require-variable-braces    # Suggest ${VAR} in place of $VAR
+enable=useless-use-of-cat         # Check for Useless Use Of Cat (UUOC)

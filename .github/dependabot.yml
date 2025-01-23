@@ -6,6 +6,8 @@ updates:
       interval: "daily"
       time: "07:00"
       timezone: "America/New_York"
+    commit-message: # Prefix all commit messages with "actions: "
+      prefix: "actions"
     labels:
       - "actions"
       - "dependabot"
@@ -13,3 +15,7 @@ updates:
       - "jeffsays"
     reviewers:
       - "jeffsays"
+    groups:
+      actions-deps:
+        patterns:
+          - "*"
