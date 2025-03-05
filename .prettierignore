@@ -1,0 +1,14 @@
+# Ignore build artifacts
+/dist/
+/lib/
+/var/
+
+# Ignore .yarn
+/.yarn/
+
+# Ignore node_modules
+/node_modules/
+
+# Ignore GitHub Actions workflows
+/.github/**/*.yaml
+/.github/**/*.yml
