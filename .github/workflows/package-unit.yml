@@ -52,6 +52,11 @@ on:
         required: false
         type: string
         default: "true"
+      flow:
+        description: "does this project use flow?"
+        required: false
+        type: string
+        default: "true"
 jobs:
   unit:
     name: Unit
@@ -96,6 +101,7 @@ jobs:
         id: yarn-test
         uses: CumulusDS/workflows-public/.github/actions/yarn-test-action@master
         with:
+          flow: ${{ inputs.flow }}
           workspace: ${{ inputs.workspace }}
           workspaces: ${{ inputs.workspaces }}
         env:
