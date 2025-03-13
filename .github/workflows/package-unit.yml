@@ -33,10 +33,10 @@ on:
         type: string
         default: ""
       nodeVersions:
-        description: "Array list of node versions to run tests against.  Default '[18, 20, 21]'"
+        description: "Array list of node versions to run tests against.  Default '[18, 20, 21, 22, 23]'"
         required: false
         type: string
-        default: "[18, 20, 21]"
+        default: "[18, 20, 21, 22, 23]"
       runsOn:
         description: "Runner to use.  Default is 'ubuntu-latest'"
         required: false
