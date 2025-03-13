@@ -13,6 +13,10 @@ inputs:
     description: "if set to true, runs against ALL workspaces"
     required: false
     default: ""
+  flow:
+    description: "does this project use flow?"
+    required: false
+    default: "true"
 outputs: {}
 runs:
   using: "composite"
@@ -26,6 +30,7 @@ runs:
       shell: bash
     - name: Start Flow Server
       id: start-flow-server
+      if: inputs.flow == 'true'
       run: |
         echo "::group::Start Flow Server"
         yarn flow start
