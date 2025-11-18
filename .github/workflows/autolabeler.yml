@@ -7,11 +7,16 @@ on:
         required: false
         type: string
         default: "ubuntu-latest"
+      timeoutMinutes:
+        description: "Timeout in minutes"
+        required: false
+        type: string
+        default: "3"
 jobs:
   label:
     name: Auto Labeler
     runs-on: ${{ inputs.runsOn }}
-    timeout-minutes: 3
+    timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}
     steps:
       - name: pr autolabeler
         uses: actions/labeler@master

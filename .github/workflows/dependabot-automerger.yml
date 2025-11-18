@@ -17,11 +17,16 @@ on:
         required: false
         type: string
         default: "60000"
+      timeoutMinutes:
+        description: "Timeout in minutes"
+        required: false
+        type: string
+        default: "20"
 jobs:
   dependabot-auto-merge:
     name: Dependabot AutoMerger
     if: github.actor == 'dependabot[bot]'
-    timeout-minutes: 20
+    timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}
     runs-on: ${{ inputs.runsOn }}
     steps:
       - name: Wait

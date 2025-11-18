@@ -7,11 +7,16 @@ on:
         required: false
         type: string
         default: "ubuntu-latest"
+      timeoutMinutes:
+        description: "Timeout in minutes"
+        required: false
+        type: string
+        default: "5"
 jobs:
   yarn:
     name: Yarn Lock Changes
     runs-on: ${{ inputs.runsOn }}
-    timeout-minutes: 5
+    timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}
     steps:
       - name: Yarn Lock Changes
         uses: CumulusDS/workflows-public/.github/actions/yarn-lock-changes-action@master
@@ -19,7 +24,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
   deprecation:
     name: Package Deprecations
-    timeout-minutes: 5
+    timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}
     runs-on: ${{ inputs.runsOn }}
     steps:
       - name: Check for deprecated packages

@@ -33,10 +33,10 @@ on:
         type: string
         default: ""
       nodeVersions:
-        description: "Array list of node versions to run tests against.  Default '[18, 20, 21]'"
+        description: "Array list of node versions to run tests against.  Default '[22, 24, 25]'"
         required: false
         type: string
-        default: "[18, 20, 21]"
+        default: "[22, 24, 25]"
       runsOn:
         description: "Runner to use.  Default is 'ubuntu-latest'"
         required: false
@@ -49,6 +49,11 @@ on:
         default: "10"
       failFast:
         description: "fail fast option for matrix"
+        required: false
+        type: string
+        default: "true"
+      flow:
+        description: "does this project use flow?"
         required: false
         type: string
         default: "true"
@@ -98,6 +103,7 @@ jobs:
         with:
           workspace: ${{ inputs.workspace }}
           workspaces: ${{ inputs.workspaces }}
+          flow: ${{ inputs.flow }}
         env:
           NODE_OPTIONS: ${{ inputs.nodeOptions }}
       - name: Upload artifact

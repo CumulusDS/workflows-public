@@ -47,11 +47,16 @@ on:
         required: false
         type: string
         default: ""
+      timeoutMinutes:
+        description: "Timeout in minutes"
+        required: false
+        type: string
+        default: "10"
 jobs:
   publish:
     name: Publish
     runs-on: ${{ inputs.runsOn }}
-    timeout-minutes: 10
+    timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}
     steps:
       - name: Setup
         uses: CumulusDS/workflows-public/.github/actions/workflow-setup-action@master
@@ -92,9 +97,9 @@ jobs:
         run: |
           pjs=($(find . -type f -name package.json -not -path "./node_modules/*"))
           echo "package.json files found: ${pjs[@]}"
-          
+
           for version in "${pjs[@]}"; do
-            if [[ "$(jq -r '.name' ${version})" == "${{ inputs.workspace }}" ]]; then 
+            if [[ "$(jq -r '.name' ${version})" == "${{ inputs.workspace }}" ]]; then
               echo "### Published $(jq '.name' ${version}) version $(jq '.version' ${version}) to NPM" >> "$GITHUB_STEP_SUMMARY"
             fi
           done
@@ -116,9 +121,9 @@ jobs:
         run: |
           pjs=($(find . -type f -name package.json -not -path "./node_modules/*"))
           echo "package.json files found: ${pjs[@]}"
-          
+
           for version in "${pjs[@]}"; do
-            if [[ "$(jq -r '.name' ${version})" == "${{ inputs.workspace }}" ]]; then 
+            if [[ "$(jq -r '.name' ${version})" == "${{ inputs.workspace }}" ]]; then
               echo "### Failed to publish $(jq '.name' ${version}) version $(jq '.version' ${version}) to NPM" >> "$GITHUB_STEP_SUMMARY"
             fi
           done

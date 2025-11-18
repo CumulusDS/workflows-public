@@ -11,7 +11,7 @@ on:
         description: "Version of Node to use"
         required: false
         type: string
-        default: "14"
+        default: "22"
       fetchDepth:
         description: "Checkout fetch depth"
         required: false
@@ -40,11 +40,16 @@ on:
         required: false
         type: string
         default: "NPM_TOKEN_PUBLISH"
+      timeoutMinutes:
+        description: "Timeout in minutes"
+        required: false
+        type: string
+        default: "10"
 jobs:
   remove-tag:
     name: Remove distribution tag
     runs-on: ${{ inputs.runsOn }}
-    timeout-minutes: 10
+    timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}
     steps:
       - name: Setup
         uses: CumulusDS/workflows-public/.github/actions/workflow-setup-action@master

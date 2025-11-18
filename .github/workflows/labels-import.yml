@@ -7,14 +7,19 @@ on:
         required: false
         type: string
         default: "ubuntu-latest"
+      timeoutMinutes:
+        description: "Timeout in minutes"
+        required: false
+        type: string
+        default: "3"
 jobs:
   import:
     name: Import Labels
     runs-on: ${{ inputs.runsOn }}
-    timeout-minutes: 3
+    timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Import between existing labels

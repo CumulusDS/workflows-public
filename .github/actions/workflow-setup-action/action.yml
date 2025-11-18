@@ -63,7 +63,7 @@ runs:
   steps:
     - name: Checkout
       id: checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v5
       with:
         fetch-depth: ${{ inputs.fetch-depth }}
         ref: ${{ inputs.ref }}
@@ -73,7 +73,7 @@ runs:
         repository: ${{ inputs.repository }}
     - name: Setup Node
       id: setup-node
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v6
       with:
         node-version: ${{ inputs.nodeVersion }}
     - name: Setup Ruby
@@ -93,7 +93,7 @@ runs:
       shell: bash
     - name: Restore yarn cache directory
       id: restore-yarn-cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{ steps.get-yarn3-cache.outputs.dir }}
         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}

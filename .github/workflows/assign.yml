@@ -7,11 +7,16 @@ on:
         required: false
         type: string
         default: "ubuntu-latest"
+      timeoutMinutes:
+        description: "Timeout in minutes"
+        required: false
+        type: string
+        default: "3"
 jobs:
   assignAuthor:
     name: Assign author
     runs-on: ${{ inputs.runsOn }}
-    timeout-minutes: 5
+    timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}
     steps:
       - name: assign
         uses: technote-space/assign-author@v1
