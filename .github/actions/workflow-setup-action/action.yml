@@ -8,7 +8,11 @@ inputs:
   nodeVersion:
     required: false
     description: "what node version to install"
-    default: "16"
+    default: ""
+  nodeVersionFile:
+    required: false
+    description: "file to read nodeVersion from"
+    default: ""
   vulnerabilityToken:
     required: false
     description: "token used for vulnerability checking"
@@ -32,7 +36,7 @@ inputs:
   path:
     required: false
     description: "Relative path under $GITHUB_WORKSPACE to place the repository"
-    default: ""
+    default: "./"
   clean:
     required: false
     description: "Whether to execute `git clean -ffdx && git reset --hard HEAD` before fetching"
@@ -57,13 +61,17 @@ inputs:
     description: "Specific token for checkout, if checking out a different repository"
     default: ${{ github.token }}
     required: false
+  cacheDependencyPath:
+    description: "Used to specify the path to a dependency file: package-lock.json, yarn.lock, etc."
+    default: ""
+    required: false
 outputs: {}
 runs:
   using: "composite"
   steps:
     - name: Checkout
       id: checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v7
       with:
         fetch-depth: ${{ inputs.fetch-depth }}
         ref: ${{ inputs.ref }}
@@ -71,11 +79,39 @@ runs:
         clean: ${{ inputs.clean }}
         token: ${{ inputs.checkoutToken }}
         repository: ${{ inputs.repository }}
+    - name: set package manager
+      id: set-pm
+      run: |
+        pm="${INPUT//[^[:alpha:]]/}"
+        echo "package manager is ${pm}"
+        echo "packageManager=${INPUT//[^[:alpha:]]/}" >> "$GITHUB_OUTPUT"
+      env:
+        INPUT: ${{ inputs.packageManager }}
+      shell: bash
+    - name: yarn v1 auth setup
+      id: yarn-auth
+      if: inputs.packageManager == 'yarn'
+      run: |
+        echo "::group::Yarn Auth"
+        echo "//registry.npmjs.org/:_authToken=${{ inputs.npmToken }}" >> ~/.npmrc
+        echo "::endgroup::"
+      shell: bash
+    - name: yarn v3/v4 auth setup
+      id: yarn3-auth
+      if: inputs.packageManager == 'yarn3' || inputs.packageManager == 'yarn4'
+      run: |
+        echo "::group::Yarn Auth"
+        yarn config set npmAuthToken ${{ inputs.npmToken }} --home
+        echo "::endgroup::"
+      shell: bash
     - name: Setup Node
       id: setup-node
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v7
       with:
+        cache: ${{ steps.set-pm.outputs.packageManager }}
+        cache-dependency-path: ${{ inputs.cacheDependencyPath }}
         node-version: ${{ inputs.nodeVersion }}
+        node-version-file: ${{ inputs.nodeVersionFile }}
     - name: Setup Ruby
       id: setup-ruby
       uses: ruby/setup-ruby@v1
@@ -83,27 +119,19 @@ runs:
       with:
         ruby-version: ${{ inputs.ruby_version }}
         bundler-cache: ${{ inputs.ruby_bundler_cache }}
-    - name: Get yarn v3 cache directory
-      id: get-yarn3-cache
-      if: inputs.packageManager == 'yarn3'
-      run: |
-        echo "::group::Get yarn cache directory"
-        echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
-        echo "::endgroup::"
-      shell: bash
-    - name: Restore yarn cache directory
-      id: restore-yarn-cache
-      uses: actions/cache@v3
-      with:
-        path: ${{ steps.get-yarn3-cache.outputs.dir }}
-        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-yarn-
-    - name: yarn v3 install
-      id: yarn3-install
-      if: inputs.packageManager == 'yarn3'
+    - name: yarn v1 install
+      id: yarn-install
+      if: inputs.packageManager == 'yarn'
       run: |
         echo "::group::Yarn Install"
-        yarn install --immutable
+        yarn --cwd "${{ inputs.path }}" install --frozen-lockfile
+        echo "::endgroup::"
+      shell: bash
+    - name: yarn v3/v4 install
+      id: yarn3-install
+      if: inputs.packageManager == 'yarn3' || inputs.packageManager == 'yarn4'
+      run: |
+        echo "::group::Yarn Install"
+        cd "${{ inputs.path }}" && yarn install --immutable
         echo "::endgroup::"
       shell: bash

@@ -7,11 +7,21 @@ on:
         required: false
         type: string
         default: "ubuntu-latest"
+      timeoutMinutes:
+        description: "Timeout in minutes"
+        required: false
+        type: string
+        default: "10"
       nodeVersion:
         description: "Version of Node to use"
         required: false
         type: string
-        default: "14"
+        default: ""
+      nodeVersionFile:
+        description: "file to read nodeVersion from"
+        required: false
+        type: string
+        default: ".nvmrc"
       fetchDepth:
         description: "Checkout fetch depth"
         required: false
@@ -44,12 +54,13 @@ jobs:
   remove-tag:
     name: Remove distribution tag
     runs-on: ${{ inputs.runsOn }}
-    timeout-minutes: 10
+    timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}
     steps:
       - name: Setup
         uses: CumulusDS/workflows-public/.github/actions/workflow-setup-action@master
         with:
           nodeVersion: ${{ inputs.nodeVersion }}
+          nodeVersionFile: ${{ inputs.nodeVersionFile }}
           ref: ${{ inputs.ref }}
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}

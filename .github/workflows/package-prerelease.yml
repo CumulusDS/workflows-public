@@ -12,6 +12,11 @@ on:
         required: false
         type: string
         default: "public"
+      timeoutMinutes:
+        description: "Timeout in minutes"
+        required: false
+        type: string
+        default: "10"
       githubEventName:
         required: false
         type: string
@@ -35,7 +40,12 @@ on:
         description: "Version of Node to use"
         required: false
         type: string
-        default: "16"
+        default: ""
+      nodeVersionFile:
+        description: "file to read nodeVersion from"
+        required: false
+        type: string
+        default: ".nvmrc"
       workspaces:
         description: "are workspaces enabled?  should this run for all workspaces?"
         required: false
@@ -50,12 +60,17 @@ jobs:
   prerelease:
     name: Publish Prerelease
     runs-on: ${{ inputs.runsOn }}
-    timeout-minutes: 10
+    timeout-minutes: ${{ fromJSON(inputs.timeoutMinutes) }}
+    concurrency:
+      group: deploy-${{ github.workflow }}-${{ github.head_ref || github.ref }}
+      cancel-in-progress: false
+      queue: max
     steps:
       - name: Setup
         uses: CumulusDS/workflows-public/.github/actions/workflow-setup-action@master
         with:
           nodeVersion: ${{ inputs.nodeVersion }}
+          nodeVersionFile: ${{ inputs.nodeVersionFile }}
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}
       - name: Set feature stage
@@ -74,20 +89,43 @@ jobs:
         run: yarn run prerelease ${{ steps.feature.outputs.stage }}
       - name: Set prerelease version (all workspaces)
         if: inputs.workspaces == 'true' && inputs.workspace == ''
-        run: yarn workspaces foreach --no-private run prerelease ${{ steps.feature.outputs.stage }}
+        run: |
+          if [[ "${{ inputs.packageManager }}" == "yarn3" ]]; then
+            echo "::debug::setting prerelease version for yarn v3"
+            yarn workspaces foreach --no-private run prerelease ${{ steps.feature.outputs.stage }}
+          elif [[ "${{ inputs.packageManager }}" == "yarn4" ]]; then
+            echo "::debug::setting prerelease version for yarn v4"
+            yarn workspaces foreach --all --topological-dev --no-private run prerelease ${{ steps.feature.outputs.stage }}
+          else
+            echo "unknown package manager"
+            exit 1
+          fi
       - name: Set prerelease version ${{ inputs.workspace }}
         if: inputs.workspaces != 'true' && inputs.workspace != ''
-        run: yarn workspaces foreach --include ${{ inputs.workspace }} run prerelease ${{ steps.feature.outputs.stage }}
+        run: yarn workspace ${{ inputs.workspace }} run prerelease ${{ steps.feature.outputs.stage }}
       # publish
       - name: Publish (packages/hybrid)
         if: inputs.workspaces != 'true' && inputs.workspace == ''
-        run: yarn npm publish --access ${{ inputs.access }} --tag ${{ steps.feature.outputs.stage }}
+        run: yarn npm publish --tag ${{ steps.feature.outputs.stage }}
       - name: Publish (all workspaces)
         if: inputs.workspaces == 'true' && inputs.workspace == ''
-        run: yarn workspaces foreach --no-private npm publish --tag ${{ steps.feature.outputs.stage }} --access ${{ inputs.access }}
+        run: |
+          echo "::group::Build"
+          yarn build
+          echo "::endgroup::"
+          if [[ "${{ inputs.packageManager }}" == "yarn3" ]]; then
+            echo "::debug::setting prerelease version for yarn v3"
+            yarn workspaces foreach --no-private npm publish --tag ${{ steps.feature.outputs.stage }}
+          elif [[ "${{ inputs.packageManager }}" == "yarn4" ]]; then
+            echo "::debug::setting prerelease version for yarn v4"
+            yarn workspaces foreach --worktree --topological-dev --no-private run publish --tag ${{ steps.feature.outputs.stage }}
+          else
+            echo "unknown package manager"
+            exit 1
+          fi
       - name: Publish ${{ inputs.workspace }}
         if: inputs.workspaces != 'true' && inputs.workspace != ''
-        run: yarn workspaces foreach --include ${{ inputs.workspace }} run publish --tag ${{ steps.feature.outputs.stage }} --access ${{ inputs.access }}
+        run: yarn workspace ${{ inputs.workspace }} run publish --tag ${{ steps.feature.outputs.stage }}
       # $GITHUB_STEP_SUMMARY
       - name: Summary (packages/hybrid)
         if: inputs.workspaces != 'true' && inputs.workspace == ''
