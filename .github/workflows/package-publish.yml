@@ -57,6 +57,9 @@ on:
         required: false
         type: string
         default: ""
+permissions:
+  id-token: write  # CRITICAL: Allows the workflow to request the OIDC JWT
+  contents: read   # Standard checkout permission
 jobs:
   publish:
     name: Publish
@@ -72,6 +75,7 @@ jobs:
           fetch-depth: ${{ inputs.fetchDepth }}
           packageManager: ${{ inputs.packageManager }}
       - name: set node publish token
+        if: ${{ inputs.npmjsPublishToken != '' }}
         uses: CumulusDS/workflows-public/.github/actions/set-publish-token@master
         with:
           npmjsPublishToken: ${{ secrets[inputs.npmjsPublishToken] }}
