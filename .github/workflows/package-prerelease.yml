@@ -56,6 +56,9 @@ on:
         required: false
         type: string
         default: ""
+permissions:
+  id-token: write  # CRITICAL: Allows the workflow to request the OIDC JWT
+  contents: read   # Standard checkout permission
 jobs:
   prerelease:
     name: Publish Prerelease
@@ -79,6 +82,7 @@ jobs:
         with:
           githubEventName: ${{ inputs.githubEventName }}
       - name: set node publish token
+        if: ${{ inputs.npmjsPublishToken != '' }}
         uses: CumulusDS/workflows-public/.github/actions/set-publish-token@master
         with:
           packageManager: ${{ inputs.packageManager }}
